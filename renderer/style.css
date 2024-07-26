@@ -1,0 +1,562 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.3s, color 0.3s;
+  background-color: #fff6d4;
+  color: #333;
+}
+
+.dark-mode {
+  background-color: #171717;
+  color: #ffffff;
+}
+
+#app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  background-color: #fff6d4;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.dark-mode header {
+  background-color: #2c2c2c;
+}
+
+h1 {
+  margin: 0;
+  font-size: 24px;
+  color: #5c5b3a;
+}
+
+.dark-mode h1 {
+  color: #848484;
+}
+
+button {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #ebfb7e;
+  color: #000000;
+  cursor: pointer;
+}
+
+.dark-mode button {
+  background-color: #3e3e3e;
+  color: rgb(240, 240, 240);
+}
+
+nav button, #themeToggle {
+  margin-right: 10px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  background-color: #fffaba;
+  color: rgb(44, 44, 44);
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 14px;
+}
+
+
+.dark-mode nav button, #themeToggle {
+  background-color: #727272;
+  color: rgb(240, 240, 240);
+}
+
+nav button:hover, #themeToggle:hover {
+  background-color: #696969;
+}
+
+#overallProgress {
+  height: 20px;
+  background-color: #e0e0e0;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#overallProgress .progress-bar {
+  height: 100%;
+  background-color: #4caf50;
+  transition: width 0.3s ease;
+}
+
+.dark-mode #overallProgress .progress-bar {
+  background-color: #010b02;
+}
+
+/* Container for centering the button */
+.button-container {
+  display: flex;
+  justify-content: left; /* Center horizontally */
+  margin-bottom: 20px; /* Ensure there's space below */
+}
+
+/* Default styling for the button */
+#addSkillButton {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  background-color: #c5e5ff;
+  color: rgb(255, 255, 255);
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 14px;
+}
+
+/* Dark mode styling for the button */
+.dark-mode #addSkillButton {
+  background-color: #486c8a;
+}
+
+#addSkillButton:hover {
+  background-color: #1976D2;
+}
+
+.skill {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #fdffde;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.dark-mode .skill {
+  background-color: #2e2e2e;
+  color: #ffffff; /* Ensure text color is white in dark mode */
+}
+
+.subskill {
+  margin-left: 20px;
+  margin-top: 10px;
+  border-left: 2px solid #4caf50;
+  padding-left: 15px;
+}
+
+.progress-bar .progress {
+  height: 100%;
+  background-color: #4caf50;
+  transition: width 0.3s;
+}
+
+.hours-input {
+  width: 60px;
+  margin-right: 10px;
+  padding: 5px;
+  border: 1px solid #fff0b6;
+  border-radius: 3px;
+}
+
+.hours-input .darkmode {
+  border: 1px solid #4f4f4f;
+}
+
+.task {
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.task input[type="checkbox"] {
+  background-color: #fdffe3;
+  margin-right: 10px;
+}
+
+.add-subskill, .add-task {
+  background-color: #f3ffa7;
+  border: none;
+  padding: 5px 10px;
+  margin-right: 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.dark-mode .add-subskill, .dark-mode .add-task {
+  background-color: #3a3a3a;
+  color: #fff;
+}
+
+.add-subskill:hover, .add-task:hover {
+  background-color: #e0e0e0;
+}
+
+.dark-mode .add-subskill:hover, .dark-mode .add-task:hover {
+  background-color: #4a4a4a;
+}
+
+.skill-details {
+  padding: 10px;
+  border-top: 1px solid #ccc;
+  border-radius: 0 0 5px 5px;
+}
+
+.dark-mode .skill-details {
+  border-top: 1px solid #444; /* Darker border in dark mode */
+  background-color: #3a3a3a; /* Background color for details in dark mode */
+}
+
+.skill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+  background-color: #fffbb1;
+  border-radius: 5px;
+}
+
+.dark-mode .skill-header {
+  background-color: #2e2e2e;
+  color: #ffffff; /* Ensure text color is white in dark mode */
+}
+
+.skill-name-container {
+  display: flex;
+  align-items: center;
+}
+
+.skill-name {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.dark-mode .skill-name {
+  color: #ffffff; /* Ensure text color is white in dark mode */
+}
+
+.skill-name-input {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.edit-skill {
+  background-color: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.toggle-details {
+  background-color: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.skill-details {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  border-top: 1px solid #fcf8a6;
+  padding: 10px;
+}
+
+.dark-mode .skill-details {
+  border-top: 1px solid #444; /* Darker border in dark mode */
+  background-color: #3a3a3a; /* Background color for details in dark mode */
+}
+
+.skill-details .tasks, .skill-details .subskills {
+  margin-top: 10px;
+}
+
+/* Base styling for delete button */
+button.delete-skill {
+  background-color: transparent;
+  border: none;
+  color: #e74c3c; /* Red color for delete button */
+  font-size: 1.2em;
+  cursor: pointer;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+/* Hover and active states */
+button.delete-skill:hover {
+  color: #c0392b; /* Darker red on hover */
+  transform: scale(1.1); /* Slightly increase size on hover */
+}
+
+button.delete-skill:active {
+  color: #e74c3c; /* Red color when clicked */
+  transform: scale(1); /* Reset size */
+}
+
+/* Dark mode styling */
+body.dark-mode button.delete-skill {
+  color: #ff6b6b; /* Light red color for dark mode */
+}
+
+body.dark-mode button.delete-skill:hover {
+  color: #ff4d4d; /* Darker light red on hover in dark mode */
+}
+
+/* Base styling for delete buttons */
+.delete-task {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: #f44336; /* Red color for delete button */
+  margin-left: 1px;
+  position: absolute;
+  right: 10px; /* Position it to the right of the task */
+  top: 50%;
+  transform: translateY(-50%); /* Center it vertically */
+}
+
+/* Dark mode styling for delete buttons */
+body.dark-mode .delete-task {
+  color: #ff5c5c; /* Slightly lighter red for dark mode */
+}
+
+/* Styling for task elements */
+.task {
+  display: flex;
+  align-items: center;
+  position: relative; /* Required for positioning delete button */
+  margin-top: 5px;
+  padding: 5px;
+  background-color: #fff4ae;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+body.dark-mode .task {
+  background-color: #2e2e2e; /* Darker background for dark mode */
+}
+
+/* Styling for task content */
+.task-content {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.task input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+.task span {
+  flex-grow: 1;
+}
+
+
+/* Base styling for progress bars */
+.progress-bar {
+  background-color: #ddd; /* Light background for the progress bar */
+  border-radius: 5px;
+  overflow: hidden;
+  height: 20px;
+  width: 100%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: width 0.3s ease;
+}
+
+/* Progress bar fill */
+.progress {
+  background-color: #1e577d; /* Default blue color */
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+/* Dark mode styling for progress bars */
+body.dark-mode .progress-bar {
+  background-color: #696969; /* Darker background for dark mode */
+}
+
+body.dark-mode .progress {
+  background-color: #13987e; /* Lighter green color for dark mode */
+}
+
+/* Base styling for the main progress bar */
+#overallProgress {
+  height: 20px;
+  background-color: #ffffff; /* Light background for light mode */
+  margin-bottom: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Progress bar fill for the main progress bar */
+#overallProgress .progress-bar {
+  height: 100%;
+  background-color: #8aff8e; /* Default green color for light mode */
+  transition: width 0.3s ease;
+}
+
+/* Dark mode styling for the main progress bar */
+body.dark-mode #overallProgress {
+  background-color: #555; /* Darker background for dark mode */
+}
+
+body.dark-mode #overallProgress .progress-bar {
+  background-color: #1e90ff; /* Lighter blue color for dark mode */
+}
+
+#calendarPage {
+  display: flex;
+  flex-direction: column;
+  height: calc(96vh - 100px); /* Adjust based on your header height */
+  background-color: #fbffbe;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-sizing: border-box;
+}
+
+.dark-mode #calendarPage {
+  background-color: #2c2c2c;
+}
+
+#calendarHeader {
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#calendarGrid {
+  display: flex;
+  flex: 1;
+  gap: 10px;
+}
+
+#calendarContainer {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+#daysOfWeek {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+#daysOfWeek h2 {
+  font-size: 0.9em;
+  margin: 0;
+  padding: 5px 0;
+}
+
+#calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 10px;
+  flex-grow: 1;
+}
+
+.calendar-day {
+  aspect-ratio: 1.6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #393939;
+  border-radius: 20%;
+  font-weight: bold;
+  cursor: pointer;
+  transition: border 0.3s ease, transform 0.1s ease-in-out;
+  box-sizing: border-box;
+  border: 2px solid transparent;
+}
+
+.calendar-day .dark-mode {
+  background-color: #e9e9e9
+}
+
+.calendar-day:hover {
+  transform: scale(1.1);
+}
+
+.calendar-day.empty {
+  background-color: transparent;
+  cursor: default;
+}
+
+.calendar-day.current-day {
+  border-color: #00858d;
+}
+
+.calendar-day.selected-day {
+  border-color: purple;
+}
+
+.dark-mode .calendar-day {
+  background-color: #3a3a3a;
+}
+
+#rightPanel {
+  flex: 1;
+  border-left: 1px solid #f8ffc4;
+  padding-left: 20px;
+  overflow-y: auto;
+  max-height: calc(80vh - 100px); /* Match height with calendarPage */
+}
+
+
+#taskContainer {
+  max-height: 300px; /* Adjust as needed */
+  overflow-y: auto; /* Enable scrolling */
+  transition: max-height 0.3s ease-in-out;
+}
+
+#taskContainer.expand {
+  max-height: 1000px; /* Set a large value to ensure it can expand fully */
+}
+
+.dark-mode #rightPanel {
+  border-left-color: #444;
+}
+
+/* Right Panel Styles */
+#rightPanel h3, #rightPanel h4 {
+  margin-top: 0;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+}
+
+.dark-mode #rightPanel h3, .dark-mode #rightPanel h4 {
+  border-bottom-color: #444;
+}
+
+#totalHours {
+  font-size: 1.2em;
+  margin-bottom: 20px;
+}
+
+#taskList {
+  list-style-type: none;
+  padding: 0;
+}
+
+#taskList li {
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #f0ffa7;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.dark-mode #taskList li {
+  background-color: #3a3a3a;
+}

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Progresso</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Progresso</h1>
+      <nav>
+        <button id="progressButton">
+          <img src="../assets/progress.png" width="48", height="48">
+        </button>
+        <button id="calendarButton">
+          <img src="../assets/calendar.png" width="48", height="48">
+        </button>
+      </nav>
+      <button id="themeToggle">🌙</button>
+    </header>
+    <main>
+      <div id="progressPage">
+        <div id="overallProgress">
+          <div class="progress-bar"></div>
+        </div>
+        <div class="button-container">
+          <button id="addSkillButton">
+            <img src="../assets/add.png" width="24", height="24">
+          </button>
+        </div>
+        <div id="skillsList"></div>
+      </div>
+        <div id="calendarPage" style="display: none">
+          <div id="calendarHeader">
+              <!-- Calendar navigation buttons and current month/year -->
+          </div>
+          <div id="calendarGrid">
+              <div id="calendarContainer">
+                  <div id="daysOfWeek">
+                      <h2>Sun</h2>
+                      <h2>Mon</h2>
+                      <h2>Tue</h2>
+                      <h2>Wed</h2>
+                      <h2>Thu</h2>
+                      <h2>Fri</h2>
+                      <h2>Sat</h2>
+                  </div>
+                  <div id="calendar">
+                      <!-- Calendar days -->
+                  </div>
+              </div>
+              <div id="rightPanel">
+                <h3>Selected Day: <span id="selectedDate"></span></h3>
+                <div id="totalHours">Hours Spent: <span id="hoursSpent"></span></div>
+                <h4>Completed Tasks:</h4>
+                <div id="taskContainer">
+                  <ul id="taskList">
+                    <!-- Completed tasks will be dynamically added here -->
+                  </ul>
+                </div>
+              </div>
+          </div>
+      </div>
+    </main>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>
