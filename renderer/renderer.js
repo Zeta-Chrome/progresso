@@ -424,9 +424,9 @@ function renderCalendar() {
     const maxHours = 12;
     const normalizedHours = Math.min(hoursWorked / maxHours, 1);
 
-    const hue = 180*normalizedHours + 180;
+    const hue = 250*normalizedHours;
     const saturation = 30;
-    const lightness = (30 - (29 * normalizedHours))*(currentTheme == 'light' ? 2.5 : 1);
+    const lightness = 25*(currentTheme == 'light' ? 2.5 : 1);
 
     dayElement.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 
