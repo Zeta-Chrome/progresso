@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   renderSkills();
   renderCalendar();
+  setupDragAndDrop();
 });
 
 function setupEventListeners() {
@@ -74,9 +75,25 @@ function renderSkills() {
   skills.forEach(skill => {
     const skillElement = createSkillElement(skill);
     skillsList.appendChild(skillElement);
+    renderSubskills(skill, skillElement);
     updateSkillProgress(skill);
   });
   updateOverallProgress();
+  setupDragAndDrop();
+}
+
+function renderSubskills(skill, parentElement) {
+  const subskillsContainer = parentElement.querySelector('.subskills');
+  if (subskillsContainer) {
+    subskillsContainer.innerHTML = '';
+    skill.subskills.forEach(subskill => {
+      const subskillElement = createSkillElement(subskill);
+      subskillElement.classList.add('subskill');
+      subskillsContainer.appendChild(subskillElement);
+      renderSubskills(subskill, subskillElement);
+    });
+    setupDragAndDrop();
+  }
 }
 
 function createSkillElement(skill) {
@@ -117,6 +134,17 @@ function createSkillElement(skill) {
     <div class="tasks"></div>
     <div class="subskills"></div>
   `;
+
+  const tasksContainer = detailsContainer.querySelector('.tasks');
+  tasksContainer.addEventListener('mousedown', (e) => {
+    if (e.button === 2) { // Right mouse button
+      e.preventDefault();
+      const taskElement = e.target.closest('.task');
+      if (taskElement) {
+        setupTaskDragAndDrop(taskElement, tasksContainer, skill);
+      }
+    }
+  });
 
   // Add event listener to toggle details
   skillHeader.querySelector('.toggle-details').addEventListener('click', () => {
@@ -423,6 +451,108 @@ function renderCalendar() {
   updateRightPanel(selectedDate);
 }
 
+function setupDragAndDrop() {
+  const skillsList = document.getElementById('skillsList');
+  let draggedElement = null;
+
+  document.addEventListener('mousedown', (e) => {
+    if (e.button === 2) { // Right mouse button
+      e.preventDefault();
+      draggedElement = e.target.closest('.skill');
+      if (draggedElement) {
+        draggedElement.style.opacity = '0.5';
+      }
+    }
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (draggedElement) {
+      const hoverElement = e.target.closest('.skill');
+      if (hoverElement && hoverElement !== draggedElement && isSameLevel(draggedElement, hoverElement)) {
+        const rect = hoverElement.getBoundingClientRect();
+        const hoverMiddle = (rect.bottom - rect.top) / 2;
+        if (e.clientY - rect.top < hoverMiddle) {
+          hoverElement.parentNode.insertBefore(draggedElement, hoverElement);
+        } else {
+          hoverElement.parentNode.insertBefore(draggedElement, hoverElement.nextSibling);
+        }
+      }
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (draggedElement) {
+      draggedElement.style.opacity = '1';
+      updateSkillsOrder(draggedElement.closest('.subskills') || skillsList);
+      draggedElement = null;
+    }
+  });
+
+  document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+  });
+}
+
+function isSameLevel(elem1, elem2) {
+  return elem1.parentNode === elem2.parentNode;
+}
+
+function setupTaskDragAndDrop(taskElement, container, skill) {
+  let draggedTask = taskElement;
+  draggedTask.style.opacity = '0.5';
+
+  const mouseMoveHandler = (e) => {
+    const hoverElement = e.target.closest('.task');
+    if (hoverElement && hoverElement !== draggedTask && hoverElement.parentNode === container) {
+      const rect = hoverElement.getBoundingClientRect();
+      const hoverMiddle = (rect.bottom - rect.top) / 2;
+      if (e.clientY - rect.top < hoverMiddle) {
+        container.insertBefore(draggedTask, hoverElement);
+      } else {
+        container.insertBefore(draggedTask, hoverElement.nextSibling);
+      }
+    }
+  };
+
+  const mouseUpHandler = () => {
+    draggedTask.style.opacity = '1';
+    document.removeEventListener('mousemove', mouseMoveHandler);
+    document.removeEventListener('mouseup', mouseUpHandler);
+    updateTasksOrder(skill, container);
+  };
+
+  document.addEventListener('mousemove', mouseMoveHandler);
+  document.addEventListener('mouseup', mouseUpHandler);
+}
+
+function updateTasksOrder(skill, container) {
+  const taskElements = container.querySelectorAll('.task');
+  skill.tasks = Array.from(taskElements).map(el => {
+    const taskId = parseInt(el.dataset.taskId);
+    return skill.tasks.find(task => task.id === taskId);
+  });
+  saveData();
+}
+
+function updateSkillsOrder(container) {
+  const skillElements = container.children;
+  const newOrder = Array.from(skillElements).map(el => {
+    const skillId = parseInt(el.id.split('-')[1]);
+    return findSkillById(skillId);
+  });
+
+  if (container.id === 'skillsList') {
+    skills = newOrder;
+  } else {
+    const parentSkillId = parseInt(container.closest('.skill').id.split('-')[1]);
+    const parentSkill = findSkillById(parentSkillId);
+    if (parentSkill) {
+      parentSkill.subskills = newOrder;
+    }
+  }
+  saveData();
+}
+
 function calculateHoursWorked(date) {
   const formattedDate = formatDate(date);
   return hoursWorkedDict[formattedDate] || 0;
@@ -455,43 +585,39 @@ function updateRightPanel(date) {
   const tasks = getTasksForDate(date);
   if (tasks.length) {
     tasks.forEach(task => {
-      const li = document.createElement('li');
-      li.textContent = `${task.name} ✅`;
-      taskList.appendChild(li);
+            const taskElement = document.createElement('li');
+      taskElement.textContent = task.name;
+      taskList.appendChild(taskElement);
     });
   } else {
-    const li = document.createElement('li');
-    li.textContent = 'No tasks completed';
-    taskList.appendChild(li);
-  }
-}
-
-async function saveData() {
-  try {
-    await window.electronAPI.saveData({ skills, hoursWorkedDict, currentTheme });
-  } catch (error) {
-    console.error('Failed to save data:', error);
+    taskList.textContent = 'No tasks completed.';
   }
 }
 
 function loadData() {
-  window.electronAPI.loadData()
-    .then(data => {
-      if (data) {
-        skills = data.skills || [];
-        hoursWorkedDict = data.hoursWorkedDict || {};
-        currentTheme = data.currentTheme || 'light';
-        if (currentTheme === 'dark') {
-          document.body.classList.add('dark-mode');
-          document.getElementById('themeToggle').textContent = '☀️';
-        }
-        renderSkills();
-        renderCalendar();
-      }
-    })
-    .catch(error => {
-      console.error('Failed to load data:', error);
-    });
+  const savedData = localStorage.getItem('progressoData');
+  if (savedData) {
+    const data = JSON.parse(savedData);
+    currentTheme = data.currentTheme || 'light';
+    skills = data.skills || [];
+    hoursWorkedDict = data.hoursWorkedDict || {};
+    selectedDate = data.selectedDate ? new Date(data.selectedDate) : null;
+    currentDate = new Date();
+    openSkillIds = new Set(data.openSkillIds || []);
+    document.body.classList.toggle('dark-mode', currentTheme === 'dark');
+    document.getElementById('themeToggle').textContent = currentTheme === 'light' ? '🌙' : '☀️';
+  }
+}
+
+function saveData() {
+  const data = {
+    currentTheme,
+    skills,
+    hoursWorkedDict,
+    selectedDate: selectedDate ? selectedDate.toISOString() : null,
+    openSkillIds: Array.from(openSkillIds)
+  };
+  localStorage.setItem('progressoData', JSON.stringify(data));
 }
 
 window.addEventListener('beforeunload', async (event) => {
