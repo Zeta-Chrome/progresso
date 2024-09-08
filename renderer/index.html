@@ -12,59 +12,71 @@
       <h1>Progresso</h1>
       <nav>
         <button id="progressButton">
-          <img src="../assets/progress.png" width="48", height="48">
+          <img src="../assets/progress.png" width="48" height="48">
         </button>
         <button id="calendarButton">
-          <img src="../assets/calendar.png" width="48", height="48">
+          <img src="../assets/calendar.png" width="48" height="48">
+        </button>
+        <button id="chartButton">
+          <img src="../assets/chart.png" width="48" height="48">
         </button>
       </nav>
       <button id="themeToggle">🌙</button>
     </header>
-    <main>
+    <main id="pages">
+      <!-- Progress Page -->
       <div id="progressPage">
         <div id="overallProgress">
           <div class="progress-bar"></div>
         </div>
         <div class="button-container">
           <button id="addSkillButton">
-            <img src="../assets/add.png" width="24", height="24">
+            <img src="../assets/add.png" width="24" height="24">
           </button>
         </div>
         <div id="skillsList"></div>
       </div>
-        <div id="calendarPage" style="display: none">
-          <div id="calendarHeader">
-              <!-- Calendar navigation buttons and current month/year -->
+      
+      <!-- Calendar Page -->
+      <div id="calendarPage" style="display: none">
+        <div id="calendarHeader"></div>
+        <div id="calendarGrid">
+          <div id="calendarContainer">
+            <div id="daysOfWeek">
+              <h2>Sun</h2>
+              <h2>Mon</h2>
+              <h2>Tue</h2>
+              <h2>Wed</h2>
+              <h2>Thu</h2>
+              <h2>Fri</h2>
+              <h2>Sat</h2>
+            </div>
+            <div id="calendar"></div>
           </div>
-          <div id="calendarGrid">
-              <div id="calendarContainer">
-                  <div id="daysOfWeek">
-                      <h2>Sun</h2>
-                      <h2>Mon</h2>
-                      <h2>Tue</h2>
-                      <h2>Wed</h2>
-                      <h2>Thu</h2>
-                      <h2>Fri</h2>
-                      <h2>Sat</h2>
-                  </div>
-                  <div id="calendar">
-                      <!-- Calendar days -->
-                  </div>
-              </div>
-              <div id="rightPanel">
-                <h3>Selected Day: <span id="selectedDate"></span></h3>
-                <div id="totalHours">Hours Spent: <span id="hoursSpent"></span></div>
-                <h4>Completed Tasks:</h4>
-                <div id="taskContainer">
-                  <ul id="taskList">
-                    <!-- Completed tasks will be dynamically added here -->
-                  </ul>
-                </div>
-              </div>
+          <div id="rightPanel">
+            <h3>Selected Day: <span id="selectedDate"></span></h3>
+            <div id="totalHours">Hours Spent: <span id="hoursSpent"></span></div>
+            <h4>Completed Tasks:</h4>
+            <div id="taskContainer">
+              <ul id="taskList">
+                <!-- Completed tasks will be dynamically added here -->
+              </ul>
+            </div>
           </div>
+        </div>
       </div>
+
+      <!-- Chart Page -->
+      <div id="chartPage" style="display: none">
+        <h2 id="chartTitle">Week Overview - <span id="monthYear"></span></h2>
+        <div id="chartContainer">
+          <canvas id="chartCanvas"></canvas>
+        </div>
+      </div>
+      
     </main>
   </div>
   <script src="renderer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>
