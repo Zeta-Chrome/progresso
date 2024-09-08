@@ -1,7 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  saveData: (data) => ipcRenderer.invoke('saveData', data),
-  loadData: () => ipcRenderer.invoke('loadData')
+  onAppQuitting: (callback) => ipcRenderer.on('app-quitting', callback),
+  dataSaved: () => ipcRenderer.send('data-saved')
 });
-
