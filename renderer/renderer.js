@@ -5,30 +5,39 @@ let currentDate = new Date();
 let openSkillIds = new Set();
 let selectedDate = null;
 
+const Pages = ["progressPage", "calendarPage", "chartPage"]
+
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
+  setCurrentTheme();
   setupEventListeners();
-  renderSkills();
-  renderCalendar();
-  setupDragAndDrop();
+  showProgressPage();
 });
 
+function loadData() {
+  const savedData = localStorage.getItem('ProgressoData');
+
+  if (savedData) {
+    const data = JSON.parse(savedData);
+    currentTheme = data.currentTheme || 'light';
+    skills = data.skills || [];
+    hoursWorkedDict = data.hoursWorkedDict || {};
+    selectedDate = data.selectedDate ? new Date(data.selectedDate) : null;
+    currentDate = new Date();
+  }
+}
+
+function setCurrentTheme() {
+  document.body.classList.toggle('dark-mode', currentTheme === 'dark');
+  document.getElementById('themeToggle').textContent = currentTheme === 'light' ? '🌙' : '☀️';
+}
+
 function setupEventListeners() {
+  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
   document.getElementById('progressButton').addEventListener('click', showProgressPage);
   document.getElementById('calendarButton').addEventListener('click', showCalendarPage);
-  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-  document.getElementById('addSkillButton').addEventListener('click', () => {addSkill(null);});
-}
-
-function showProgressPage() {
-  document.getElementById('progressPage').style.display = 'block';
-  document.getElementById('calendarPage').style.display = 'none';
-}
-
-function showCalendarPage() {
-  document.getElementById('progressPage').style.display = 'none';
-  document.getElementById('calendarPage').style.display = 'block';
-  renderCalendar();
+  document.getElementById('chartButton').addEventListener('click', showChartPage);
+  document.getElementById('addSkillButton').addEventListener('click', () => addSkill());
 }
 
 function toggleTheme() {
@@ -36,34 +45,62 @@ function toggleTheme() {
   document.body.classList.toggle('dark-mode');
   document.getElementById('themeToggle').textContent = currentTheme === 'light' ? '🌙' : '☀️';
   renderCalendar();
+  renderChart();
+}
+
+function showPage(page) {
+  // Hide all pages
+  Pages.forEach(pageId => {
+    document.getElementById(pageId).style.display = 'none';
+  });
+
+  // Show a specific page (for example, 'calendarPage')
+  document.getElementById(page).style.display = 'block';
+}
+
+function showProgressPage() {
+  showPage("progressPage");
+  renderSkills();
+}
+
+function showCalendarPage() {
+  showPage("calendarPage");
+  renderCalendar();
+}
+
+function showChartPage() {
+  showPage("chartPage");
+  renderChart();
 }
 
 function addSkill(parentId = null) {
-  const skillCount = parentId ? findSkillById(parentId).subskills.length : skills.length;
+  
   const newSkill = {
     id: Date.now(),
-    name: ``,
-    subskills: [],
+    name: "",
+    skills: [],
     tasks: [],
     hours: 0,
-    isEditing: true  // Start in editing mode
+    isEditing: true
   };
-  
+
   if (parentId) {
-    const parent = findSkillById(parentId);
-    if (parent) {
-      parent.subskills.push(newSkill);
+    const parentSkill = findSkillById(parentId);
+    if (parentSkill) {
+      parentSkill.skills.push(newSkill);
+      renderSkill(newSkill, document.querySelector(`#skill-${parentId} > .skill-details > .skills`));
     }
   } else {
     skills.push(newSkill);
+    renderSkill(newSkill, document.getElementById('skillsList'));
   }
-  renderSkills();
+  updateOverallProgress();
 }
 
 function findSkillById(id, skillList = skills) {
   for (const skill of skillList) {
     if (skill.id === id) return skill;
-    const subskill = findSkillById(id, skill.subskills);
+    const subskill = findSkillById(id, skill.skills);
     if (subskill) return subskill;
   }
   return null;
@@ -72,40 +109,36 @@ function findSkillById(id, skillList = skills) {
 function renderSkills() {
   const skillsList = document.getElementById('skillsList');
   skillsList.innerHTML = '';
-  skills.forEach(skill => {
-    const skillElement = createSkillElement(skill);
-    skillsList.appendChild(skillElement);
-    renderSubskills(skill, skillElement);
-    updateSkillProgress(skill);
-  });
+  skills.forEach(skill => renderSkill(skill, skillsList));
   updateOverallProgress();
   setupDragAndDrop();
 }
 
-function renderSubskills(skill, parentElement) {
-  const subskillsContainer = parentElement.querySelector('.subskills');
-  if (subskillsContainer) {
-    subskillsContainer.innerHTML = '';
-    skill.subskills.forEach(subskill => {
-      const subskillElement = createSkillElement(subskill);
-      subskillElement.classList.add('subskill');
-      subskillsContainer.appendChild(subskillElement);
-      renderSubskills(subskill, subskillElement);
-    });
-    setupDragAndDrop();
-  }
+function renderSkill(skill, container) {
+  const skillElement = createSkillElement(skill);
+  container.appendChild(skillElement);
+  skill.skills.forEach(subskill => renderSkill(subskill, skillElement.querySelector('.skills')));
+  updateSkillProgress(skill);
 }
 
 function createSkillElement(skill) {
   const skillElement = document.createElement('div');
   skillElement.className = 'skill';
-  skillElement.id = `skill-${skill.id}`;  // Add an ID for easy selection
+  skillElement.id = `skill-${skill.id}`;
 
-  // Create a container for the skill's header and details
+  const skillHeader = createSkillHeader(skill);
+  const detailsContainer = createDetailsContainer(skill);
+
+  skillElement.appendChild(skillHeader);
+  skillElement.appendChild(detailsContainer);
+
+  return skillElement;
+}
+
+function createSkillHeader(skill) {
   const skillHeader = document.createElement('div');
   skillHeader.className = 'skill-header';
 
-  // Create the skill name input or display
   const nameElement = skill.isEditing 
     ? `<input type="text" class="skill-name-input" value="${skill.name}">`
     : `<h3 class="skill-name">${skill.name}</h3>`;
@@ -115,13 +148,18 @@ function createSkillElement(skill) {
       ${nameElement}
       <button class="edit-skill">✏️</button>
     </div>
-    <button class="delete-skill">🗑️</button> <!-- Updated delete button -->
+    <button class="delete-skill">🗑️</button>
   `;
 
-  // Create a container for the skill's details
+  addSkillHeaderEventListeners(skillHeader, skill);
+
+  return skillHeader;
+}
+
+function createDetailsContainer(skill) {
   const detailsContainer = document.createElement('div');
   detailsContainer.className = 'skill-details';
-  detailsContainer.style.maxHeight = openSkillIds.has(skill.id) ? 'none' : '0'; // No height limit or initially hidden
+  detailsContainer.style.maxHeight = openSkillIds.has(skill.id) ? 'none' : '0';
   detailsContainer.style.opacity = openSkillIds.has(skill.id) ? '1' : '0';
   detailsContainer.style.transition = 'max-height 0.3s ease, opacity 0.3s ease';
   detailsContainer.innerHTML = `
@@ -129,15 +167,58 @@ function createSkillElement(skill) {
       <div class="progress" style="width: ${calculateProgress(skill)}%"></div>
     </div>
     <input type="number" value="${skill.hours}" min="0" step="0.5" class="hours-input">
-    <button class="add-subskill">+ Subskill</button>
+    <button class="add-skill">+ Skill</button>
     <button class="add-task">+ Task</button>
     <div class="tasks"></div>
-    <div class="subskills"></div>
+    <div class="skills"></div>
   `;
 
+  addDetailsContainerEventListeners(detailsContainer, skill);
+
+  renderTasks(detailsContainer.querySelector('.tasks'), skill);
+
+  return detailsContainer;
+}
+
+function addSkillHeaderEventListeners(skillHeader, skill) {
+  const toggleButton = skillHeader.querySelector('.toggle-details');
+  const editButton = skillHeader.querySelector('.edit-skill');
+  const deleteButton = skillHeader.querySelector('.delete-skill');
+
+  toggleButton.addEventListener('click', () => toggleSkillDetails(skill, skillHeader));
+  editButton.addEventListener('click', () => toggleSkillEditing(skill));
+  deleteButton.addEventListener('click', () => deleteSkill(skill.id));
+
+  if (skill.isEditing) {
+    const input = skillHeader.querySelector('.skill-name-input');
+    input.addEventListener('blur', () => finishEditing(skill, input));
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') input.blur();
+    });
+    setTimeout(() => {
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }, 0);
+  }
+}
+
+function addDetailsContainerEventListeners(detailsContainer, skill) {
+  const hoursInput = detailsContainer.querySelector('.hours-input');
+  const addSkillButton = detailsContainer.querySelector('.add-skill');
+  const addTaskButton = detailsContainer.querySelector('.add-task');
   const tasksContainer = detailsContainer.querySelector('.tasks');
+
+  hoursInput.addEventListener('change', (e) => updateSkillHours(skill, e.target.value));
+  addSkillButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    addSkill(skill.id);
+  });
+  addTaskButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    addTask(skill);
+  });
   tasksContainer.addEventListener('mousedown', (e) => {
-    if (e.button === 2) { // Right mouse button
+    if (e.button === 2) {
       e.preventDefault();
       const taskElement = e.target.closest('.task');
       if (taskElement) {
@@ -145,126 +226,76 @@ function createSkillElement(skill) {
       }
     }
   });
-
-  // Add event listener to toggle details
-  skillHeader.querySelector('.toggle-details').addEventListener('click', () => {
-    const isDetailsVisible = detailsContainer.style.maxHeight === '0px';
-    detailsContainer.style.maxHeight = isDetailsVisible ? 'none' : '0'; // No max height limit
-    detailsContainer.style.opacity = isDetailsVisible ? '1' : '0';
-    skillHeader.querySelector('.toggle-details').textContent = isDetailsVisible ? '▲' : '▼';
-    if (isDetailsVisible) {
-      openSkillIds.add(skill.id);
-    } else {
-      openSkillIds.delete(skill.id);
-    }
-  });
-
-  // Handle editing
-  const input = skillHeader.querySelector('.skill-name-input, .skill-name');
-  const editButton = skillHeader.querySelector('.edit-skill');
-  const deleteButton = skillHeader.querySelector('.delete-skill');
-
-  editButton.addEventListener('click', () => {
-    skill.isEditing = !skill.isEditing;
-    renderSkills();
-  });
-
-  if (skill.isEditing) {
-    input.focus();
-    input.setSelectionRange(input.value.length, input.value.length);
-    input.addEventListener('blur', () => {
-      skill.name = input.value.trim() || `Skill ${skills.indexOf(skill) + 1}`;
-      skill.isEditing = false;
-      renderSkills();
-    });
-    input.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        input.blur();
-      }
-    });
-  }
-
-  // Add delete button event listener
-  deleteButton.addEventListener('click', () => {
-    deleteSkill(skill.id);
-  });
-
-  // Event listeners for the hours input and add buttons
-  detailsContainer.querySelector('.hours-input').addEventListener('change', (e) => {
-    const newHours = (parseFloat(e.target.value) || 0 ) - skill.hours;
-    const formattedDate = formatDate(currentDate);
-    
-    // Update the hours worked on the selected date
-    hoursWorkedDict[formattedDate] = (hoursWorkedDict[formattedDate] || 0) + newHours;
-    
-    // Update the skill's hours
-    skill.hours = parseFloat(e.target.value) || 0;
-    
-    // Re-render calendar to reflect changes
-    renderCalendar();
-  });
-
-  // Prevent dropdown toggle from closing when adding subskill or task
-  detailsContainer.querySelector('.add-subskill').addEventListener('click', (e) => {
-    e.stopPropagation();  // Prevent event from propagating to the toggle button
-    addSkill(skill.id);
-  });
-
-  detailsContainer.querySelector('.add-task').addEventListener('click', (e) => {
-    e.stopPropagation();  // Prevent event from propagating to the toggle button
-    addTask(skill);
-  });
-
-  // Render tasks and subskills
-  renderTasks(detailsContainer.querySelector('.tasks'), skill);
-  skill.subskills.forEach(subskill => {
-    const subskillElement = createSkillElement(subskill);
-    subskillElement.classList.add('subskill');
-    detailsContainer.querySelector('.subskills').appendChild(subskillElement);
-  });
-
-  // Append header and details container to the skill element
-  skillElement.appendChild(skillHeader);
-  skillElement.appendChild(detailsContainer);
-
-  // Focus the input field if it is in editing mode
-  if (skill.isEditing) {
-    setTimeout(() => {
-      const newInput = skillElement.querySelector('.skill-name-input');
-      if (newInput) {
-        newInput.focus();
-        newInput.setSelectionRange(newInput.value.length, newInput.value.length);
-      }
-    }, 0);  // Use setTimeout to ensure the element is added to the DOM
-  }
-
-  return skillElement;
 }
 
-function formatDate(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based, so add 1
-  const day = String(date.getDate()).padStart(2, '0'); // Pad single-digit days with leading zero
+function toggleSkillDetails(skill, skillHeader) {
+  const detailsContainer = skillHeader.nextElementSibling;
+  const isDetailsVisible = detailsContainer.style.maxHeight === '0px';
+  detailsContainer.style.maxHeight = isDetailsVisible ? 'none' : '0';
+  detailsContainer.style.opacity = isDetailsVisible ? '1' : '0';
+  skillHeader.querySelector('.toggle-details').textContent = isDetailsVisible ? '▲' : '▼';
+  isDetailsVisible ? openSkillIds.add(skill.id) : openSkillIds.delete(skill.id);
+}
+
+function toggleSkillEditing(skill) {
+  skill.isEditing = !skill.isEditing;
+  const skillElement = document.getElementById(`skill-${skill.id}`);
+  const newSkillElement = createSkillElement(skill);
+  skillElement.parentNode.replaceChild(newSkillElement, skillElement);
+}
+
+function finishEditing(skill, input) {
+  skill.name = input.value.trim() || "";
+  skill.isEditing = false;
+  const skillElement = document.getElementById(`skill-${skill.id}`);
+  const newSkillElement = createSkillElement(skill);
+  skillElement.parentNode.replaceChild(newSkillElement, skillElement);
+}
+
+function updateSkillHours(skill, newValue) {
+  const newHours = parseFloat(newValue) || 0;
+  const hoursDiff = newHours - skill.hours;
+  const formattedDate = formatDate(currentDate);
   
-  return `${year}-${month}-${day}`;
+  hoursWorkedDict[formattedDate] = (hoursWorkedDict[formattedDate] || 0) + hoursDiff;
+  skill.hours = newHours;
+  updateSkillProgress(skill);
+  updateOverallProgress();
+  renderCalendar();
 }
 
 function deleteSkill(id) {
-  skills = skills.filter(skill => skill.id !== id);
-  skills.forEach(skill => deleteSubskill(skill, id));
-  renderSkills();
+  const skillToDelete = findSkillById(id);
+  if (!skillToDelete) return;
+
+  const parentSkill = findParentSkill(id);
+  if (parentSkill) {
+    parentSkill.skills = parentSkill.skills.filter(s => s.id !== id);
+    updateSkillProgress(parentSkill);
+  } else {
+    skills = skills.filter(s => s.id !== id);
+  }
+
+  const skillElement = document.getElementById(`skill-${id}`);
+  if (skillElement) skillElement.remove();
+
+  updateOverallProgress();
 }
 
-function deleteSubskill(skill, id) {
-  skill.subskills = skill.subskills.filter(subskill => subskill.id !== id);
-  skill.subskills.forEach(subskill => deleteSubskill(subskill, id));
+function findParentSkill(childId, skillList = skills) {
+  for (const skill of skillList) {
+    if (skill.skills && skill.skills.some(s => s.id === childId)) return skill;
+    const found = findParentSkill(childId, skill.skills);
+    if (found) return found;
+  }
+  return null;
 }
 
 function addTask(skill) {
-  const taskId = Date.now();  // Generate a unique ID for the task
+  const taskId = Date.now();
   const taskElement = document.createElement('div');
   taskElement.className = 'task';
-  taskElement.dataset.taskId = taskId;  // Store the task ID in a data attribute
+  taskElement.dataset.taskId = taskId;
   taskElement.innerHTML = `
     <div class="task-content">
       <input type="text" class="task-name-input" value="" placeholder="Enter task name">
@@ -273,30 +304,27 @@ function addTask(skill) {
     </div>
   `;
   
-  // Append the new task element to the skill's tasks container
   const tasksElement = document.querySelector(`#skill-${skill.id} .tasks`);
   tasksElement.appendChild(taskElement);
 
-  // Focus the input field for the new task
   const input = taskElement.querySelector('.task-name-input');
   input.focus();
 
-  // Save the task when Enter is pressed
   input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
       const taskName = input.value.trim();
       if (taskName) {
         skill.tasks.push({ id: taskId, name: taskName, completed: false });
         renderTasks(tasksElement, skill);
-        renderSkills();
-        taskElement.remove(); // Remove the task element after saving
+        updateSkillProgress(skill);
+        updateOverallProgress();
+        taskElement.remove();
       }
     }
   });
 
-  // Handle task deletion
   taskElement.querySelector('.delete-task').addEventListener('click', () => {
-    taskElement.remove(); // Remove the task element when deleted
+    taskElement.remove();
   });
 }
 
@@ -305,40 +333,45 @@ function renderTasks(tasksElement, skill) {
   skill.tasks.forEach(task => {
     const taskElement = document.createElement('div');
     taskElement.className = 'task';
-    taskElement.dataset.taskId = task.id;  // Store the task ID in a data attribute
+    taskElement.dataset.taskId = task.id;
     taskElement.innerHTML = `
       <div class="task-content">
         <input type="checkbox" ${task.completed ? 'checked' : ''}>
         <span>${task.name}</span>
       </div>
-      <button class="delete-task">🗑️</button> <!-- Added delete button -->
+      <button class="delete-task">🗑️</button>
     `;
     
-    // Event listener for task checkbox
     taskElement.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
       task.completed = e.target.checked;
-      task.date = currentDate
-      renderSkills();
+      task.date = currentDate;
+      updateSkillProgress(skill);
+      updateOverallProgress();
     });
 
-    // Event listener for delete button
     taskElement.querySelector('.delete-task').addEventListener('click', () => {
       skill.tasks = skill.tasks.filter(t => t.id !== task.id);
       renderTasks(tasksElement, skill);
-      renderSkills();
+      updateSkillProgress(skill);
+      updateOverallProgress();
     });
 
     tasksElement.appendChild(taskElement);
   });
 }
 
-
 function calculateTotalTasks(skill) {
-  return skill.tasks.length + skill.subskills.reduce((sum, subskill) => sum + calculateTotalTasks(subskill), 0);
+  if (skill.skills.length > 0)
+    return skill.tasks.length + skill.skills.reduce((sum, subskill) => sum + calculateTotalTasks(subskill), 0);
+  else
+  return skill.tasks.length;
 }
 
 function calculateCompletedTasks(skill) {
-  return skill.tasks.filter(task => task.completed).length + skill.subskills.reduce((sum, subskill) => sum + calculateCompletedTasks(subskill), 0);
+  if (skill.skills.length > 0)
+    return skill.tasks.filter(task => task.completed).length + skill.skills.reduce((sum, subskill) => sum + calculateCompletedTasks(subskill), 0);
+  else
+    return skill.tasks.filter(task => task.completed).length;
 }
 
 function calculateProgress(skill) {
@@ -357,12 +390,9 @@ function updateSkillProgress(skill) {
     }
   }
   
-  // Update parent skill if exists
-  if (skill.parentId) {
-    const parentSkill = findSkillById(skill.parentId);
-    if (parentSkill) {
-      updateSkillProgress(parentSkill);
-    }
+  const parentSkill = findParentSkill(skill.id);
+  if (parentSkill) {
+    updateSkillProgress(parentSkill);
   }
 }
 
@@ -373,82 +403,11 @@ function updateOverallProgress() {
   document.querySelector('#overallProgress .progress-bar').style.width = `${progress}%`;
 }
 
-function renderCalendar() {
-  const calendarHeader = document.getElementById('calendarHeader');
-  const calendar = document.getElementById('calendar');
-  calendar.innerHTML = '';
-  calendarHeader.innerHTML = '';
-
-  const prevButton = document.createElement('button');
-  prevButton.textContent = '<';
-  prevButton.addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    renderCalendar();
-  });
-  calendarHeader.appendChild(prevButton);
-
-  if(!selectedDate) {
-    selectedDate = currentDate;
-  }
-
-  const selectedDateDisplay = document.createElement('h2');
-  selectedDateDisplay.id = 'currentDateDisplay';
-  selectedDateDisplay.textContent = `${currentDate.toLocaleString('default', { month: 'long' })} ${currentDate.getFullYear()}`;
-  calendarHeader.appendChild(selectedDateDisplay);
-
-  const nextButton = document.createElement('button');
-  nextButton.textContent = '>';
-  nextButton.addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    renderCalendar();
-  });
-  calendarHeader.appendChild(nextButton);
-
-  const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
-  const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
-  const today = new Date();
-
-  for (let i = 0; i < firstDay; i++) {
-    const emptyDay = document.createElement('div');
-    emptyDay.className = 'calendar-day empty';
-    calendar.appendChild(emptyDay);
-  }
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    const dayElement = document.createElement('div');
-    dayElement.className = 'calendar-day';
-    dayElement.textContent = day;
-
-    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    const hoursWorked = calculateHoursWorked(date);
-    const maxHours = 12;
-    const normalizedHours = Math.min(hoursWorked / maxHours, 1);
-
-    const hue = 250*normalizedHours;
-    const saturation = 30;
-    const lightness = 25*(currentTheme == 'light' ? 2.5 : 1);
-
-    dayElement.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-
-    if (date.toDateString() === today.toDateString()) {
-      dayElement.classList.add('current-day');
-    }
-
-    if (selectedDate && date.toDateString() === selectedDate.toDateString()) {
-      dayElement.classList.add('selected-day');
-    }
-
-    dayElement.addEventListener('click', () => {
-      selectedDate = date;
-      renderCalendar();
-      updateRightPanel(date);
-    });
-
-    calendar.appendChild(dayElement);
-  }
-
-  // Update right panel for the initially selected date
-  updateRightPanel(selectedDate);
+function formatDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function setupDragAndDrop() {
@@ -483,7 +442,7 @@ function setupDragAndDrop() {
   document.addEventListener('mouseup', () => {
     if (draggedElement) {
       draggedElement.style.opacity = '1';
-      updateSkillsOrder(draggedElement.closest('.subskills') || skillsList);
+      updateSkillsOrder(draggedElement.closest('.skills') || skillsList);
       draggedElement = null;
     }
   });
@@ -531,7 +490,6 @@ function updateTasksOrder(skill, container) {
     const taskId = parseInt(el.dataset.taskId);
     return skill.tasks.find(task => task.id === taskId);
   });
-  saveData();
 }
 
 function updateSkillsOrder(container) {
@@ -547,30 +505,95 @@ function updateSkillsOrder(container) {
     const parentSkillId = parseInt(container.closest('.skill').id.split('-')[1]);
     const parentSkill = findSkillById(parentSkillId);
     if (parentSkill) {
-      parentSkill.subskills = newOrder;
+      parentSkill.skills = newOrder;
     }
   }
-  saveData();
+}
+
+function renderCalendar() {
+  const calendarHeader = document.getElementById('calendarHeader');
+  const calendar = document.getElementById('calendar');
+  calendar.innerHTML = '';
+  calendarHeader.innerHTML = '';
+  
+  const createButton = (text, action) => {
+    const button = document.createElement('button');
+    button.textContent = text;
+    button.addEventListener('click', action);
+    return button;
+  };
+
+  calendarHeader.appendChild(createButton('<<', () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+  }));
+
+  selectedDate = selectedDate || currentDate;
+
+  const selectedDateDisplay = document.createElement('h2');
+  selectedDateDisplay.id = 'currentDateDisplay';
+  selectedDateDisplay.textContent = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+  calendarHeader.appendChild(selectedDateDisplay);
+
+  calendarHeader.appendChild(createButton('>>', () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+  }));
+
+  const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+  const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+  const today = new Date();
+
+  const createDayElement = (day) => {
+    const dayElement = document.createElement('div');
+    dayElement.className = 'calendar-day';
+    dayElement.textContent = day;
+
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    const hoursWorked = calculateHoursWorked(date);
+    const maxHours = 12;
+    const normalizedHours = Math.min(hoursWorked / maxHours, 1);
+
+    const hue = 250 * normalizedHours;
+    const saturation = 30;
+    
+    // Check if the body has the dark-mode class
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    const lightness = isDarkMode ? 25 * 1.5 : 25 * 2.5;
+
+    dayElement.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+
+    if (date.toDateString() === today.toDateString()) {
+      dayElement.classList.add('current-day');
+    }
+
+    if (date.toDateString() === selectedDate.toDateString()) {
+      dayElement.classList.add('selected-day');
+    }
+
+    dayElement.addEventListener('click', () => {
+      selectedDate = date;
+      renderCalendar();
+      updateRightPanel(date);
+    });
+
+    return dayElement;
+  };
+
+  calendar.append(
+    ...Array(firstDay).fill().map(() => {
+      const emptyDay = document.createElement('div');
+      emptyDay.className = 'calendar-day empty';
+      return emptyDay;
+    }),
+    ...Array(daysInMonth).fill().map((_, index) => createDayElement(index + 1))
+  );
+
+  updateRightPanel(selectedDate);
 }
 
 function calculateHoursWorked(date) {
-  const formattedDate = formatDate(date);
-  return hoursWorkedDict[formattedDate] || 0;
-}
-
-function getTasksForDate(date) {
-  return skills.flatMap(skill => 
-    skill.tasks.filter(task => 
-      task.completed && task.date && new Date(task.date).toDateString() === date.toDateString()
-    )
-  );
-}
-
-function updateHours(skill, date, hours) {
-  if (!skill.dailyHours) skill.dailyHours = {};
-  skill.dailyHours[date.toDateString()] = hours;
-  renderCalendar();
-  saveData();
+  return hoursWorkedDict[formatDate(date)] || 0;
 }
 
 function updateRightPanel(date) {
@@ -581,32 +604,228 @@ function updateRightPanel(date) {
   selectedDate.textContent = date.toDateString();
   hoursSpent.textContent = calculateHoursWorked(date);
 
-  taskList.innerHTML = '';
   const tasks = getTasksForDate(date);
-  if (tasks.length) {
-    tasks.forEach(task => {
-            const taskElement = document.createElement('li');
-      taskElement.textContent = task.name;
-      taskList.appendChild(taskElement);
-    });
-  } else {
-    taskList.textContent = 'No tasks completed.';
-  }
+  taskList.innerHTML = tasks.length
+    ? tasks.map(task => `<li>${task.name}</li>`).join('')
+    : 'No tasks completed.';
 }
 
-function loadData() {
-  const savedData = localStorage.getItem('progressoData');
-  if (savedData) {
-    const data = JSON.parse(savedData);
-    currentTheme = data.currentTheme || 'light';
-    skills = data.skills || [];
-    hoursWorkedDict = data.hoursWorkedDict || {};
-    selectedDate = data.selectedDate ? new Date(data.selectedDate) : null;
-    currentDate = new Date();
-    openSkillIds = new Set(data.openSkillIds || []);
-    document.body.classList.toggle('dark-mode', currentTheme === 'dark');
-    document.getElementById('themeToggle').textContent = currentTheme === 'light' ? '🌙' : '☀️';
+function getTasksForDate(date) {
+  return skills.flatMap(skill => 
+    getAllTasksFromSkill(skill).filter(task => 
+      task.completed && 
+      new Date(task.date).toDateString() === date.toDateString()
+    )
+  );
+}
+
+function getAllTasksFromSkill(skill) {
+  let tasks = [...skill.tasks];
+  if (skill.skills && skill.skills.length > 0) {
+    skill.skills.forEach(subskill => {
+      tasks = tasks.concat(getAllTasksFromSkill(subskill));
+    });
   }
+  return tasks;
+}
+
+function renderChart() {
+  const chartPage = document.getElementById('chartPage');
+  chartPage.innerHTML = '';
+
+  const chartTitle = document.createElement('h2');
+  chartTitle.id = 'chartTitle';
+  chartPage.appendChild(chartTitle);
+
+  const buttonContainer = document.createElement('div');
+  buttonContainer.id = 'buttonContainer';
+  chartPage.appendChild(buttonContainer);
+
+  const createButton = (text, action) => {
+    const button = document.createElement('button');
+    button.textContent = text;
+    button.addEventListener('click', action);
+    return button;
+  };
+
+  let currentView = 'week';
+  let currentStartDate = new Date(currentDate);
+  currentStartDate.setDate(currentStartDate.getDate() - currentStartDate.getDay());
+  console.log(currentStartDate);
+  const updateChart = () => {
+    const endDate = new Date(currentStartDate);
+    let days, title, labels;
+  
+    switch (currentView) {
+      case 'week':
+        days = 7;
+        endDate.setDate(endDate.getDate() + 6);
+        console.log(endDate);
+        title = `Week of ${currentStartDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
+        labels = Array.from({ length: 7 }, (_, i) => {
+          const date = new Date(currentStartDate);
+          date.setDate(date.getDate() + i);
+          return date.toLocaleDateString('en-US', { weekday: 'short' });
+        });
+        break;
+      case 'month':
+        days = new Date(currentStartDate.getFullYear(), currentStartDate.getMonth() + 1, 0).getDate();
+        endDate.setMonth(endDate.getMonth() + 1);
+        endDate.setDate(0);
+        title = currentStartDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+        labels = Array.from({ length: days }, (_, i) => i + 1);
+        break;
+      case 'year':
+        days = 365;
+        endDate.setFullYear(endDate.getFullYear() + 1);
+        endDate.setDate(0);
+        title = currentStartDate.getFullYear().toString();
+        
+        // Generate labels for each day of the year with month names only at the beginning of each month
+        labels = Array.from({ length: 365 }, (_, i) => {
+          const date = new Date(title, 0, i + 1); // Start from January 1st
+          return date.toLocaleDateString('default', { month: 'short', day: 'numeric' });
+        });
+        
+        break;
+    }
+  
+    chartTitle.textContent = title;
+  
+    const data = [];
+    let maxHours = 8;
+  
+    for (let i = 0; i < days; i++) {
+      const date = new Date(currentStartDate);
+      if (currentView === 'year') {
+        date.setDate(date.getDate() + i);
+        const hours = calculateHoursWorked(date);
+        data.push(hours);
+        maxHours = Math.max(maxHours, hours);
+      } else if (currentView === 'month') {
+        date.setDate(date.getDate() + i);
+        const hours = calculateHoursWorked(date);
+        data.push(hours);
+        maxHours = Math.max(maxHours, hours);
+      } else if (currentView === 'week') {
+        date.setDate(date.getDate() + i);
+        const hours = calculateHoursWorked(date);
+        data.push(hours);
+        maxHours = Math.max(maxHours, hours);
+      }
+    }
+  
+    const chartContainer = document.getElementById('chartContainer');
+    chartContainer.innerHTML = '';
+    const canvas = document.createElement('canvas');
+    chartContainer.appendChild(canvas);
+  
+    const ctx = canvas.getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: data.map(d => {
+            const normalizedHours = Math.min(d / maxHours, 1);
+            const hue = 250 * normalizedHours;
+            const saturation = 30;
+            const lightness = 25 * (currentTheme === 'light' ? 2.5 : 1);
+            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+          }),
+          barPercentage: 1,
+          categoryPercentage: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            ticks: {
+              callback: function(value, index) {
+                // Show month names only for the beginning of each month in the 'year' view
+                if (currentView === 'year' && labels[value] !== '') {
+                  return labels[value];
+                } else if (currentView === 'year') {
+                  return '';
+                } else {
+                  return labels[index];
+                }
+              }
+            }
+          },
+          y: {
+            beginAtZero: true,
+            max: maxHours
+          }
+        },
+        animation: {
+          duration: 1000,
+          easing: 'easeOutQuart'
+        },
+        plugins: {
+          legend: {
+            display: false
+          }
+        }
+      }
+    });
+  };
+
+  buttonContainer.appendChild(createButton('<<', () => {
+    switch (currentView) {
+      case 'week':
+        currentStartDate.setDate(currentStartDate.getDate() - 7);
+        break;
+      case 'month':
+        currentStartDate.setMonth(currentStartDate.getMonth() - 1);
+        break;
+      case 'year':
+        currentStartDate.setFullYear(currentStartDate.getFullYear() - 1);
+        break;
+    }
+    updateChart();
+  }));
+
+  ['Week', 'Month', 'Year'].forEach(view => {
+    const button = createButton(view, () => {
+      currentView = view.toLowerCase();
+      currentStartDate = new Date(selectedDate);
+      if (currentView === 'week') {
+        currentStartDate = new Date(currentDate);
+        currentStartDate.setDate(currentStartDate.getDate() - currentStartDate.getDay());
+      } else if (currentView === 'month') {
+        currentStartDate.setDate(1);
+      } else if (currentView === 'year') {
+        currentStartDate.setMonth(0, 1);
+      }
+      updateChart();
+    });
+    buttonContainer.appendChild(button);
+  });
+
+  buttonContainer.appendChild(createButton('>>', () => {
+    switch (currentView) {
+      case 'week':
+        currentStartDate.setDate(currentStartDate.getDate() + 7);
+        break;
+      case 'month':
+        currentStartDate.setMonth(currentStartDate.getMonth() + 1);
+        break;
+      case 'year':
+        currentStartDate.setFullYear(currentStartDate.getFullYear() + 1);
+        break;
+    }
+    updateChart();
+  }));
+
+  const chartContainer = document.createElement('div');
+  chartContainer.id = 'chartContainer';
+  chartPage.appendChild(chartContainer);
+
+  updateChart();
 }
 
 function saveData() {
@@ -615,11 +834,18 @@ function saveData() {
     skills,
     hoursWorkedDict,
     selectedDate: selectedDate ? selectedDate.toISOString() : null,
-    openSkillIds: Array.from(openSkillIds)
   };
-  localStorage.setItem('progressoData', JSON.stringify(data));
+
+  localStorage.setItem('ProgressoData', JSON.stringify(data));
 }
 
-window.addEventListener('beforeunload', async (event) => {
-  await saveData();
+// Listen for the quit signal from the main process
+window.electronAPI.onAppQuitting(() => {
+  saveData();
+  window.electronAPI.dataSaved();
+});
+
+// Call saveData when the page is about to unload
+window.addEventListener('beforeunload', () => {
+  saveData();
 });
