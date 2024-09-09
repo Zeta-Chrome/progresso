@@ -251,13 +251,19 @@ nav button:hover, #themeToggle:hover {
   border-radius: 3px;
 }
 
-.hours-input .dark-mode {
+.dark-mode .hours-input {
   border: 1px solid #4f4f4f;
 }
 
 .hours-label {
   font-size: 16px;
   color: #333; /* Adjust text color as needed */
+  margin-right: 80px; /* Add space to the right of the text */
+}
+
+.dark-mode .hours-label{
+  font-size: 16px;
+  color: #cfcfcf; /* Adjust text color as needed */
   margin-right: 80px; /* Add space to the right of the text */
 }
 
