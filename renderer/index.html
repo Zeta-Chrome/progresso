@@ -23,22 +23,27 @@
       </nav>
       <button id="themeToggle">🌙</button>
     </header>
+    
+    <!-- Main Content Area -->
     <main id="pages">
       <!-- Progress Page -->
       <div id="progressPage">
         <div id="overallProgress">
           <div class="progress-bar"></div>
         </div>
-        <div class="button-container">
-          <button id="addSkillButton">
-            <img src="../assets/add.png" width="24" height="24">
-          </button>
+        <div id="progressPageContent">
+          <div id="skillsList" class="skills-flex"></div>
+          <div class="button-container">
+            <button id="addSkillButton">
+              <img src="../assets/add.png" width="24" height="24">
+            </button>
+          </div>
         </div>
-        <div id="skillsList"></div>
+        <div id="leftPanel"></div> <!-- Left Panel for Progress Page -->
       </div>
       
       <!-- Calendar Page -->
-      <div id="calendarPage" style="display: none">
+      <div id="calendarPage" style="display: none;">
         <div id="calendarHeader"></div>
         <div id="calendarGrid">
           <div id="calendarContainer">
@@ -67,15 +72,17 @@
       </div>
 
       <!-- Chart Page -->
-      <div id="chartPage" style="display: none">
+      <div id="chartPage" style="display: none;">
         <h2 id="chartTitle">Week Overview - <span id="monthYear"></span></h2>
         <div id="chartContainer">
           <canvas id="chartCanvas"></canvas>
         </div>
       </div>
-      
-    </main>
-  </div>
+    </main> <!-- End of Main Content -->
+    
+  </div> <!-- End of App -->
+  
+  <!-- JavaScript Files -->
   <script src="renderer.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
