@@ -21,10 +21,9 @@ function createWindow() {
     icon: path.join(__dirname, 'build', 'icons', '64x64.png')
   });
 
-  if (isDevelopment) {
-    // Open DevTools if in development mode
+  // Open DevTools if in development mode
+  if (isDevelopment)
     mainWindow.webContents.openDevTools();
-  }
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
