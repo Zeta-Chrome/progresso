@@ -2,8 +2,8 @@ let currentTheme = 'light';
 let skills = [];
 let hoursWorkedDict = {}
 let currentDate = new Date();
-let openSkillIds = new Set();
 let selectedDate = null;
+let openPanelStack = [];
 
 const Pages = ["progressPage", "calendarPage", "chartPage"]
 
@@ -73,7 +73,7 @@ function showChartPage() {
   renderChart();
 }
 
-function addSkill(parentId = null) {
+function addSkill(detailsContainer = null, parentId = null) {
   
   const newSkill = {
     id: Date.now(),
@@ -84,16 +84,18 @@ function addSkill(parentId = null) {
     isEditing: true
   };
 
+  if(!detailsContainer)
+    detailsContainer = document.getElementById('skillsList')
+
   if (parentId) {
     const parentSkill = findSkillById(parentId);
-    if (parentSkill) {
+    if (parentSkill)
       parentSkill.skills.push(newSkill);
-      renderSkill(newSkill, document.querySelector(`#skill-${parentId} > .skill-details > .skills`));
-    }
-  } else {
+  } 
+  else
     skills.push(newSkill);
-    renderSkill(newSkill, document.getElementById('skillsList'));
-  }
+
+  renderSkill(newSkill, detailsContainer);
   updateOverallProgress();
 }
 
@@ -106,10 +108,12 @@ function findSkillById(id, skillList = skills) {
   return null;
 }
 
-function renderSkills() {
-  const skillsList = document.getElementById('skillsList');
-  skillsList.innerHTML = '';
-  skills.forEach(skill => renderSkill(skill, skillsList));
+function renderSkills(container = null, skillList = skills) {
+  if (!container)
+    container = document.getElementById('skillsList');
+  container.innerHTML = '';
+  skillList.forEach(skill => renderSkill(skill, container));
+
   updateOverallProgress();
   setupDragAndDrop();
 }
@@ -117,7 +121,6 @@ function renderSkills() {
 function renderSkill(skill, container) {
   const skillElement = createSkillElement(skill);
   container.appendChild(skillElement);
-  skill.skills.forEach(subskill => renderSkill(subskill, skillElement.querySelector('.skills')));
   updateSkillProgress(skill);
 }
 
@@ -127,11 +130,25 @@ function createSkillElement(skill) {
   skillElement.id = `skill-${skill.id}`;
 
   const skillHeader = createSkillHeader(skill);
-  const detailsContainer = createDetailsContainer(skill);
 
   skillElement.appendChild(skillHeader);
-  skillElement.appendChild(detailsContainer);
 
+  // Create and append the progress bar
+  const progressBarContainer = document.createElement('div');
+  progressBarContainer.className = 'progress-bar';
+  
+  const progressBar = document.createElement('div');
+  progressBar.className = 'progress';
+  progressBar.style.width = `${calculateProgress(skill)}%`;
+
+  progressBarContainer.appendChild(progressBar);
+  skillElement.appendChild(progressBarContainer);
+
+  const toggleDetailsButton = document.createElement('button');
+  toggleDetailsButton.className = 'toggle-details';
+  toggleDetailsButton.textContent = '▼';
+  toggleDetailsButton.addEventListener('click', () => openSkillDetails(skill));
+  skillElement.appendChild(toggleDetailsButton);
   return skillElement;
 }
 
@@ -143,10 +160,9 @@ function createSkillHeader(skill) {
     ? `<input type="text" class="skill-name-input" value="${skill.name}">`
     : `<h3 class="skill-name">${skill.name}</h3>`;
   skillHeader.innerHTML = `
-    <button class="toggle-details">${openSkillIds.has(skill.id) ? '▲' : '▼'}</button>
+    <button class="edit-skill">✏️</button>
     <div class="skill-name-container">
       ${nameElement}
-      <button class="edit-skill">✏️</button>
     </div>
     <button class="delete-skill">🗑️</button>
   `;
@@ -156,38 +172,12 @@ function createSkillHeader(skill) {
   return skillHeader;
 }
 
-function createDetailsContainer(skill) {
-  const detailsContainer = document.createElement('div');
-  detailsContainer.className = 'skill-details';
-  detailsContainer.style.maxHeight = openSkillIds.has(skill.id) ? 'none' : '0';
-  detailsContainer.style.opacity = openSkillIds.has(skill.id) ? '1' : '0';
-  detailsContainer.style.transition = 'max-height 0.3s ease, opacity 0.3s ease';
-  detailsContainer.innerHTML = `
-    <div class="progress-bar">
-      <div class="progress" style="width: ${calculateProgress(skill)}%"></div>
-    </div>
-    <input type="number" value="${skill.hours}" min="0" step="0.5" class="hours-input">
-    <button class="add-skill">+ Skill</button>
-    <button class="add-task">+ Task</button>
-    <div class="tasks"></div>
-    <div class="skills"></div>
-  `;
-
-  addDetailsContainerEventListeners(detailsContainer, skill);
-
-  renderTasks(detailsContainer.querySelector('.tasks'), skill);
-
-  return detailsContainer;
-}
-
 function addSkillHeaderEventListeners(skillHeader, skill) {
-  const toggleButton = skillHeader.querySelector('.toggle-details');
   const editButton = skillHeader.querySelector('.edit-skill');
   const deleteButton = skillHeader.querySelector('.delete-skill');
 
-  toggleButton.addEventListener('click', () => toggleSkillDetails(skill, skillHeader));
+  deleteButton.addEventListener('click', () => deleteSkill(skill));
   editButton.addEventListener('click', () => toggleSkillEditing(skill));
-  deleteButton.addEventListener('click', () => deleteSkill(skill.id));
 
   if (skill.isEditing) {
     const input = skillHeader.querySelector('.skill-name-input');
@@ -202,6 +192,57 @@ function addSkillHeaderEventListeners(skillHeader, skill) {
   }
 }
 
+function openSkillDetails(skill, push=true) {
+  const leftPanel = document.getElementById('leftPanel');
+  const progressPageContent = document.getElementById('progressPageContent');
+  leftPanel.innerHTML = `
+    <button class="back-button">⬅️ Back</button>
+    <h3>${skill.name}</h3>
+    <div class="skill-details">
+      <div class="progress-bar">
+        <div class="progress" style="width: ${calculateProgress(skill)}%"></div>
+      </div>
+      <div class="hours-container">
+        <input type="number" value="${skill.hours}" min="0" step="0.5" class="hours-input">
+        <span class="hours-label">hours</span>
+        <button class="add-skill">+ Skill</button>
+        <button class="add-task">+ Task</button>
+      </div>
+      <div class="tasks"></div>
+      <div class="skills"></div>
+    </div>
+  `;
+
+  updatePanelProgress(skill);
+
+  // Add event listeners for skill/task addition and back button
+  leftPanel.querySelector('.back-button').addEventListener('click', closeLeftPanel);
+  addDetailsContainerEventListeners(leftPanel, skill);
+
+  renderTasks(leftPanel.querySelector('.tasks'), skill);
+  renderSkills(leftPanel.querySelector('.skills'), skill.skills);
+
+  // Display the left panel
+  leftPanel.classList.add('active');
+  progressPageContent.classList.add('with-panel');
+  if (push)
+    openPanelStack.push(skill);
+}
+
+function closeLeftPanel() {
+  openPanelStack.pop();
+  if (openPanelStack.length === 0) {
+    // If the stack is empty, hide the panel
+    const leftPanel = document.getElementById('leftPanel');
+    const progressPageContent = document.getElementById('progressPageContent');
+    leftPanel.classList.remove('active');
+    progressPageContent.classList.remove('with-panel');
+  } else {
+    // Show the previous panel in the stack
+    openSkillDetails(openPanelStack[openPanelStack.length - 1], false);
+  }
+}
+
 function addDetailsContainerEventListeners(detailsContainer, skill) {
   const hoursInput = detailsContainer.querySelector('.hours-input');
   const addSkillButton = detailsContainer.querySelector('.add-skill');
@@ -211,11 +252,11 @@ function addDetailsContainerEventListeners(detailsContainer, skill) {
   hoursInput.addEventListener('change', (e) => updateSkillHours(skill, e.target.value));
   addSkillButton.addEventListener('click', (e) => {
     e.stopPropagation();
-    addSkill(skill.id);
+    addSkill(detailsContainer, skill.id);
   });
   addTaskButton.addEventListener('click', (e) => {
     e.stopPropagation();
-    addTask(skill);
+    addTask(detailsContainer, skill);
   });
   tasksContainer.addEventListener('mousedown', (e) => {
     if (e.button === 2) {
@@ -226,15 +267,6 @@ function addDetailsContainerEventListeners(detailsContainer, skill) {
       }
     }
   });
-}
-
-function toggleSkillDetails(skill, skillHeader) {
-  const detailsContainer = skillHeader.nextElementSibling;
-  const isDetailsVisible = detailsContainer.style.maxHeight === '0px';
-  detailsContainer.style.maxHeight = isDetailsVisible ? 'none' : '0';
-  detailsContainer.style.opacity = isDetailsVisible ? '1' : '0';
-  skillHeader.querySelector('.toggle-details').textContent = isDetailsVisible ? '▲' : '▼';
-  isDetailsVisible ? openSkillIds.add(skill.id) : openSkillIds.delete(skill.id);
 }
 
 function toggleSkillEditing(skill) {
@@ -248,8 +280,19 @@ function finishEditing(skill, input) {
   skill.name = input.value.trim() || "";
   skill.isEditing = false;
   const skillElement = document.getElementById(`skill-${skill.id}`);
-  const newSkillElement = createSkillElement(skill);
-  skillElement.parentNode.replaceChild(newSkillElement, skillElement);
+  
+  // Find the input element
+  const inputElement = skillElement.querySelector('.skill-name-input');
+  
+  if (inputElement) {
+    // Create a new <h3> element
+    const newHeading = document.createElement('h3');
+    newHeading.className = 'skill-name';
+    newHeading.textContent = skill.name;  // Set the skill name
+    
+    // Replace the input element with the <h3> element
+    inputElement.parentNode.replaceChild(newHeading, inputElement);
+  }
 }
 
 function updateSkillHours(skill, newValue) {
@@ -259,12 +302,12 @@ function updateSkillHours(skill, newValue) {
   
   hoursWorkedDict[formattedDate] = (hoursWorkedDict[formattedDate] || 0) + hoursDiff;
   skill.hours = newHours;
-  updateSkillProgress(skill);
-  updateOverallProgress();
   renderCalendar();
 }
 
-function deleteSkill(id) {
+function deleteSkill(skill) {
+  let id = skill.id;
+  updatePanelProgress(skill);
   const skillToDelete = findSkillById(id);
   if (!skillToDelete) return;
 
@@ -272,6 +315,7 @@ function deleteSkill(id) {
   if (parentSkill) {
     parentSkill.skills = parentSkill.skills.filter(s => s.id !== id);
     updateSkillProgress(parentSkill);
+    updatePanelProgress(parentSkill);
   } else {
     skills = skills.filter(s => s.id !== id);
   }
@@ -291,7 +335,7 @@ function findParentSkill(childId, skillList = skills) {
   return null;
 }
 
-function addTask(skill) {
+function addTask(detailsContainer, skill) {
   const taskId = Date.now();
   const taskElement = document.createElement('div');
   taskElement.className = 'task';
@@ -304,7 +348,7 @@ function addTask(skill) {
     </div>
   `;
   
-  const tasksElement = document.querySelector(`#skill-${skill.id} .tasks`);
+  const tasksElement = detailsContainer.querySelector(`.tasks`);
   tasksElement.appendChild(taskElement);
 
   const input = taskElement.querySelector('.task-name-input');
@@ -316,6 +360,7 @@ function addTask(skill) {
       if (taskName) {
         skill.tasks.push({ id: taskId, name: taskName, completed: false });
         renderTasks(tasksElement, skill);
+        updatePanelProgress(skill);
         updateSkillProgress(skill);
         updateOverallProgress();
         taskElement.remove();
@@ -326,6 +371,7 @@ function addTask(skill) {
   taskElement.querySelector('.delete-task').addEventListener('click', () => {
     taskElement.remove();
   });
+
 }
 
 function renderTasks(tasksElement, skill) {
@@ -345,6 +391,7 @@ function renderTasks(tasksElement, skill) {
     taskElement.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
       task.completed = e.target.checked;
       task.date = currentDate;
+      updatePanelProgress(skill);
       updateSkillProgress(skill);
       updateOverallProgress();
     });
@@ -352,6 +399,7 @@ function renderTasks(tasksElement, skill) {
     taskElement.querySelector('.delete-task').addEventListener('click', () => {
       skill.tasks = skill.tasks.filter(t => t.id !== task.id);
       renderTasks(tasksElement, skill);
+      updatePanelProgress(skill);
       updateSkillProgress(skill);
       updateOverallProgress();
     });
@@ -380,6 +428,18 @@ function calculateProgress(skill) {
   return totalTasks === 0 ? 0 : (completedTasks / totalTasks) * 100;
 }
 
+function updatePanelProgress(skill) {
+  const progress = calculateProgress(skill);
+  const leftPanel = document.getElementById(`leftPanel`);
+
+  if (leftPanel) {
+    const progressBar = leftPanel.querySelector('.progress-bar .progress');
+    if (progressBar) {
+      progressBar.style.width = `${progress}%`;
+    }
+  }
+}
+
 function updateSkillProgress(skill) {
   const progress = calculateProgress(skill);
   const skillElement = document.getElementById(`skill-${skill.id}`);
@@ -389,7 +449,7 @@ function updateSkillProgress(skill) {
       progressBar.style.width = `${progress}%`;
     }
   }
-  
+
   const parentSkill = findParentSkill(skill.id);
   if (parentSkill) {
     updateSkillProgress(parentSkill);
@@ -400,7 +460,10 @@ function updateOverallProgress() {
   const totalTasks = skills.reduce((sum, skill) => sum + calculateTotalTasks(skill), 0);
   const completedTasks = skills.reduce((sum, skill) => sum + calculateCompletedTasks(skill), 0);
   const progress = totalTasks === 0 ? 0 : (completedTasks / totalTasks) * 100;
-  document.querySelector('#overallProgress .progress-bar').style.width = `${progress}%`;
+  console.log(progress);
+  overallProgress = document.querySelector('#overallProgress .progress-bar');
+  console.log(overallProgress);
+  overallProgress.style.width = `${progress}%`;
 }
 
 function formatDate(date) {
@@ -651,7 +714,6 @@ function renderChart() {
   let currentView = 'week';
   let currentStartDate = new Date(currentDate);
   currentStartDate.setDate(currentStartDate.getDate() - currentStartDate.getDay());
-  console.log(currentStartDate);
   const updateChart = () => {
     const endDate = new Date(currentStartDate);
     let days, title, labels;
@@ -660,7 +722,6 @@ function renderChart() {
       case 'week':
         days = 7;
         endDate.setDate(endDate.getDate() + 6);
-        console.log(endDate);
         title = `Week of ${currentStartDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
         labels = Array.from({ length: 7 }, (_, i) => {
           const date = new Date(currentStartDate);
