@@ -1,18 +1,21 @@
 {
   "name": "progresso-electron",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A progress tracking and calendar app",
   "main": "main.js",
-  "homepage": "https://progressoelectron.com",  
+  "homepage": "https://progressoelectron.com",
   "scripts": {
     "start": "electron .",
     "dist:linux": "electron-builder --linux"
   },
-  "author": "Cosmic Developers <cosmicdevelopers23@gmail.com>",  
+  "author": "Cosmic Developers <cosmicdevelopers23@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "electron": "4.0.0",
-    "electron-builder": "20.38.5"
+    "cross-env": "^7.0.3",
+    "electron": "^32.0.2",
+    "electron-builder": "^25.0.5",
+    "electron-rebuild": "^3.2.9",
+    "electronmon": "^2.0.3"
   },
   "build": {
     "appId": "com.cosmic.progresso",
