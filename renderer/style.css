@@ -161,6 +161,7 @@ nav button:hover, #themeToggle:hover {
   padding-right: 20px;
   margin-left: 0;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 #progressPageContent::-webkit-scrollbar {
@@ -331,7 +332,7 @@ nav button:hover, #themeToggle:hover {
 .skill-name-container {
   display: flex;
   align-items: center;
-  width: 50%;
+  width: 80%;
 }
 
 .skill-name {
@@ -586,6 +587,21 @@ body.dark-mode #calendarPage {
   padding-left: 20px;
   overflow-y: auto;
   max-height: calc(80vh - 100px); /* Match height with calendarPage */
+}
+
+.date {
+  display: flex;          
+  align-items: center;     
+  gap: 10px;             
+}
+
+.date button{
+  margin-bottom: 30px;
+  margin-left: 10px;
+}
+
+.button-set {
+  color: red !important;
 }
 
 #taskContainer {
