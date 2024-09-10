@@ -16,14 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function loadData() {
   const savedData = localStorage.getItem('ProgressoData');
-
   if (savedData) {
     const data = JSON.parse(savedData);
     currentTheme = data.currentTheme || 'light';
     skills = data.skills || [];
     hoursWorkedDict = data.hoursWorkedDict || {};
     selectedDate = data.selectedDate ? new Date(data.selectedDate) : null;
-    currentDate = new Date();
   }
 }
 
@@ -38,6 +36,8 @@ function setupEventListeners() {
   document.getElementById('calendarButton').addEventListener('click', showCalendarPage);
   document.getElementById('chartButton').addEventListener('click', showChartPage);
   document.getElementById('addSkillButton').addEventListener('click', () => addSkill());
+  document.getElementById('setCurrentDate').addEventListener('click', () => setCurrentDate());
+  setupMainSkillDragAndDrop();
 }
 
 function toggleTheme() {
@@ -73,6 +73,38 @@ function showChartPage() {
   renderChart();
 }
 
+function setupMainSkillDragAndDrop() {
+  const skillsGrid = document.getElementById('skillsList');
+
+  skillsGrid.addEventListener('mousedown', (e) => {
+    if (e.button === 2) {
+      e.preventDefault(); 
+
+      const skillElement = e.target.closest('.skill');
+      if (skillElement) {
+        setupDragAndDrop(skillElement, skillsGrid, null, 'skill');
+      }
+    }
+  });
+}
+
+function setCurrentDate() {
+  const setCurrentDateButton = document.getElementById('setCurrentDate');
+
+  // Toggle button state
+  if (setCurrentDateButton.classList.contains('button-set')) {
+    setCurrentDateButton.classList.remove('button-set');
+    setCurrentDateButton.innerText = "Set";
+    currentDate = new Date();
+  } else {
+    setCurrentDateButton.classList.add('button-set');
+    setCurrentDateButton.innerText = "Unset";
+    currentDate = selectedDate;
+  }
+
+  renderCalendar();
+}
+
 function addSkill(detailsContainer = null, parentId = null) {
   
   const newSkill = {
@@ -87,15 +119,16 @@ function addSkill(detailsContainer = null, parentId = null) {
   if(!detailsContainer)
     detailsContainer = document.getElementById('skillsList')
 
-  if (parentId) {
-    const parentSkill = findSkillById(parentId);
-    if (parentSkill)
-      parentSkill.skills.push(newSkill);
-  } 
-  else
-    skills.push(newSkill);
+  renderSkill(newSkill, detailsContainer)
 
-  renderSkill(newSkill, detailsContainer);
+  if(parentId) {
+    const skill = findSkillById(parentId);
+    skill.skills.push(newSkill);
+  }
+  else {
+    skills.push(newSkill);
+  }
+
   updateOverallProgress();
 }
 
@@ -115,13 +148,11 @@ function renderSkills(container = null, skillList = skills) {
   skillList.forEach(skill => renderSkill(skill, container));
 
   updateOverallProgress();
-  setupDragAndDrop();
 }
 
 function renderSkill(skill, container) {
   const skillElement = createSkillElement(skill);
   container.appendChild(skillElement);
-  updateSkillProgress(skill);
 }
 
 function createSkillElement(skill) {
@@ -216,7 +247,7 @@ function openSkillDetails(skill, push=true) {
   updatePanelProgress(skill);
 
   // Add event listeners for skill/task addition and back button
-  leftPanel.querySelector('.back-button').addEventListener('click', closeLeftPanel);
+  leftPanel.querySelector('.back-button').addEventListener('click', () => closeLeftPanel());
   addDetailsContainerEventListeners(leftPanel, skill);
 
   renderTasks(leftPanel.querySelector('.tasks'), skill);
@@ -229,9 +260,13 @@ function openSkillDetails(skill, push=true) {
     openPanelStack.push(skill);
 }
 
-function closeLeftPanel() {
-  openPanelStack.pop();
-  if (openPanelStack.length === 0) {
+function closeLeftPanel(closeall=false) {
+  const skill = openPanelStack.pop();
+  const parentSkill = findParentSkill(skill.id);
+  if (openPanelStack.length > 0 && openPanelStack[openPanelStack.length - 1] !== parentSkill) {
+    openPanelStack.length = 0;
+  }
+  if (openPanelStack.length === 0 || closeall) {
     // If the stack is empty, hide the panel
     const leftPanel = document.getElementById('leftPanel');
     const progressPageContent = document.getElementById('progressPageContent');
@@ -247,23 +282,35 @@ function addDetailsContainerEventListeners(detailsContainer, skill) {
   const hoursInput = detailsContainer.querySelector('.hours-input');
   const addSkillButton = detailsContainer.querySelector('.add-skill');
   const addTaskButton = detailsContainer.querySelector('.add-task');
+  const skillsContainer = detailsContainer.querySelector('.skills');
   const tasksContainer = detailsContainer.querySelector('.tasks');
 
   hoursInput.addEventListener('change', (e) => updateSkillHours(skill, e.target.value));
   addSkillButton.addEventListener('click', (e) => {
     e.stopPropagation();
-    addSkill(detailsContainer, skill.id);
+    addSkill(skillsContainer, skill.id);
   });
   addTaskButton.addEventListener('click', (e) => {
     e.stopPropagation();
     addTask(detailsContainer, skill);
   });
+  skillsContainer.addEventListener('mousedown', (e) => {
+    if (e.button === 2) {
+      e.preventDefault();
+      const skillElement = e.target.closest('.skill');
+      const skillsContainer = detailsContainer.querySelector('.skills');
+      if (skillElement) {
+        setupDragAndDrop(skillElement, skillsContainer, skill, "skill");
+      }
+    }
+  });
   tasksContainer.addEventListener('mousedown', (e) => {
     if (e.button === 2) {
       e.preventDefault();
       const taskElement = e.target.closest('.task');
+      const tasksContainer = detailsContainer.querySelector('.tasks');
       if (taskElement) {
-        setupTaskDragAndDrop(taskElement, tasksContainer, skill);
+        setupDragAndDrop(taskElement, tasksContainer, findSkillById(skill.id), "task");
       }
     }
   });
@@ -277,7 +324,7 @@ function toggleSkillEditing(skill) {
 }
 
 function finishEditing(skill, input) {
-  skill.name = input.value.trim() || "";
+  skill.name = input.value.trim() || "New Skill";
   skill.isEditing = false;
   const skillElement = document.getElementById(`skill-${skill.id}`);
   
@@ -317,6 +364,8 @@ function deleteSkill(skill) {
     updateSkillProgress(parentSkill);
     updatePanelProgress(parentSkill);
   } else {
+    if (openPanelStack.length > 0)
+      closeLeftPanel(true);
     skills = skills.filter(s => s.id !== id);
   }
 
@@ -348,18 +397,20 @@ function addTask(detailsContainer, skill) {
     </div>
   `;
   
-  const tasksElement = detailsContainer.querySelector(`.tasks`);
-  tasksElement.appendChild(taskElement);
-
+  const tasksContainer = detailsContainer.querySelector('.tasks');
+  tasksContainer.appendChild(taskElement);
+  
   const input = taskElement.querySelector('.task-name-input');
   input.focus();
 
   input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
+      const input = taskElement.querySelector('.task-name-input');
       const taskName = input.value.trim();
       if (taskName) {
         skill.tasks.push({ id: taskId, name: taskName, completed: false });
-        renderTasks(tasksElement, skill);
+        skill.tasks = sortTasks(skill.tasks); // Sort tasks after adding a new one
+        renderTasks(tasksContainer, skill);
         updatePanelProgress(skill);
         updateSkillProgress(skill);
         updateOverallProgress();
@@ -371,12 +422,23 @@ function addTask(detailsContainer, skill) {
   taskElement.querySelector('.delete-task').addEventListener('click', () => {
     taskElement.remove();
   });
+}
 
+function sortTasks(tasks) {
+  return tasks.sort((a, b) => {
+    if (a.completed === b.completed) {
+      // If both tasks have the same completion status, maintain their relative order
+      return tasks.indexOf(a) - tasks.indexOf(b);
+    }
+    return a.completed ? 1 : -1;
+  });
 }
 
 function renderTasks(tasksElement, skill) {
   tasksElement.innerHTML = '';
-  skill.tasks.forEach(task => {
+  const sortedTasks = sortTasks(skill.tasks);
+  
+  sortedTasks.forEach(task => {
     const taskElement = document.createElement('div');
     taskElement.className = 'task';
     taskElement.dataset.taskId = task.id;
@@ -388,12 +450,26 @@ function renderTasks(tasksElement, skill) {
       <button class="delete-task">🗑️</button>
     `;
     
-    taskElement.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
+    const checkbox = taskElement.querySelector('input[type="checkbox"]');
+    checkbox.addEventListener('change', (e) => {
+      const wasCompleted = task.completed;
       task.completed = e.target.checked;
       task.date = currentDate;
+
+      if (wasCompleted && !task.completed) {
+        // If a checked task is unchecked, move it to the top of the list
+        skill.tasks = skill.tasks.filter(t => t.id !== task.id);
+        skill.tasks.unshift(task);
+      } else if (!wasCompleted && task.completed) {
+        // If an unchecked task is checked, move it to the bottom of the list
+        skill.tasks = skill.tasks.filter(t => t.id !== task.id);
+        skill.tasks.push(task);
+      }
+
       updatePanelProgress(skill);
       updateSkillProgress(skill);
       updateOverallProgress();
+      renderTasks(tasksElement, skill); // Re-render tasks to update order
     });
 
     taskElement.querySelector('.delete-task').addEventListener('click', () => {
@@ -403,7 +479,6 @@ function renderTasks(tasksElement, skill) {
       updateSkillProgress(skill);
       updateOverallProgress();
     });
-
     tasksElement.appendChild(taskElement);
   });
 }
@@ -443,6 +518,8 @@ function updatePanelProgress(skill) {
 function updateSkillProgress(skill) {
   const progress = calculateProgress(skill);
   const skillElement = document.getElementById(`skill-${skill.id}`);
+  
+  // Update the progress bar width
   if (skillElement) {
     const progressBar = skillElement.querySelector('.progress-bar .progress');
     if (progressBar) {
@@ -450,6 +527,46 @@ function updateSkillProgress(skill) {
     }
   }
 
+  if (progress === 100) {
+    // If the skill's progress is 100%
+    const parentSkill = findParentSkill(skill.id);
+    
+    if (parentSkill) {
+      // Move the skill to the bottom of its parent's skills list
+      const index = parentSkill.skills.findIndex(s => s.id === skill.id);
+      if (index !== -1) {
+        parentSkill.skills.push(parentSkill.skills.splice(index, 1)[0]);
+      }
+    } else {
+      // Move the skill to the bottom of the main skills list
+      const index = skills.findIndex(s => s.id === skill.id);
+      if (index !== -1) {
+        skills.push(skills.splice(index, 1)[0]);
+        renderSkills();
+      }
+    }
+  } else {
+    // If the skill's progress is less than 100%
+    const parentSkill = findParentSkill(skill.id);
+    if (parentSkill) {
+      // Check if the skill is at the bottom of its parent's skills list
+      const index = parentSkill.skills.findIndex(s => s.id === skill.id);
+      if (index === parentSkill.skills.length - 1) {
+        // Move the skill to the top of the parent's skills list
+        parentSkill.skills.unshift(parentSkill.skills.splice(index, 1)[0]);
+      }
+    } else {
+      // Check if the skill is at the bottom of the main skills list
+      const index = skills.findIndex(s => s.id === skill.id);
+      if (index === skills.length - 1) {
+        // Move the skill to the top of the main skills list
+        skills.unshift(skills.splice(index, 1)[0]);
+        renderSkills();
+      }
+    }
+  }
+
+  // Recursively update parent skills
   const parentSkill = findParentSkill(skill.id);
   if (parentSkill) {
     updateSkillProgress(parentSkill);
@@ -460,9 +577,7 @@ function updateOverallProgress() {
   const totalTasks = skills.reduce((sum, skill) => sum + calculateTotalTasks(skill), 0);
   const completedTasks = skills.reduce((sum, skill) => sum + calculateCompletedTasks(skill), 0);
   const progress = totalTasks === 0 ? 0 : (completedTasks / totalTasks) * 100;
-  console.log(progress);
   overallProgress = document.querySelector('#overallProgress .progress-bar');
-  console.log(overallProgress);
   overallProgress.style.width = `${progress}%`;
 }
 
@@ -473,103 +588,67 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
-function setupDragAndDrop() {
-  const skillsList = document.getElementById('skillsList');
-  let draggedElement = null;
-
-  document.addEventListener('mousedown', (e) => {
-    if (e.button === 2) { // Right mouse button
-      e.preventDefault();
-      draggedElement = e.target.closest('.skill');
-      if (draggedElement) {
-        draggedElement.style.opacity = '0.5';
-      }
-    }
-  });
-
-  document.addEventListener('mousemove', (e) => {
-    if (draggedElement) {
-      const hoverElement = e.target.closest('.skill');
-      if (hoverElement && hoverElement !== draggedElement && isSameLevel(draggedElement, hoverElement)) {
-        const rect = hoverElement.getBoundingClientRect();
-        const hoverMiddle = (rect.bottom - rect.top) / 2;
-        if (e.clientY - rect.top < hoverMiddle) {
-          hoverElement.parentNode.insertBefore(draggedElement, hoverElement);
-        } else {
-          hoverElement.parentNode.insertBefore(draggedElement, hoverElement.nextSibling);
-        }
-      }
-    }
-  });
-
-  document.addEventListener('mouseup', () => {
-    if (draggedElement) {
-      draggedElement.style.opacity = '1';
-      updateSkillsOrder(draggedElement.closest('.skills') || skillsList);
-      draggedElement = null;
-    }
-  });
-
-  document.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-  });
-}
-
 function isSameLevel(elem1, elem2) {
   return elem1.parentNode === elem2.parentNode;
 }
 
-function setupTaskDragAndDrop(taskElement, container, skill) {
-  let draggedTask = taskElement;
-  draggedTask.style.opacity = '0.5';
+function setupDragAndDrop(Element, container, parentSkill, type) {
+  let draggedElement = Element;
+  draggedElement.style.opacity = '0.5';
 
   const mouseMoveHandler = (e) => {
-    const hoverElement = e.target.closest('.task');
-    if (hoverElement && hoverElement !== draggedTask && hoverElement.parentNode === container) {
+    const hoverElement = e.target.closest(`.${type}`);
+    if (hoverElement && hoverElement !== draggedElement && hoverElement.parentNode === container) {
       const rect = hoverElement.getBoundingClientRect();
-      const hoverMiddle = (rect.bottom - rect.top) / 2;
-      if (e.clientY - rect.top < hoverMiddle) {
-        container.insertBefore(draggedTask, hoverElement);
+      const hoverMiddleX = (rect.right - rect.left) / 2;
+      const hoverMiddleY = (rect.bottom - rect.top) / 2;
+
+      const isLeft = e.clientX < rect.left + hoverMiddleX;
+      const isAbove = e.clientY < rect.top + hoverMiddleY;
+
+      if (isLeft && isAbove) {
+        container.insertBefore(draggedElement, hoverElement);
+      } else if (isLeft && !isAbove) {
+        container.insertBefore(draggedElement, hoverElement.nextSibling);
+      } else if (!isLeft && isAbove) {
+        container.insertBefore(draggedElement, hoverElement);
       } else {
-        container.insertBefore(draggedTask, hoverElement.nextSibling);
+        container.insertBefore(draggedElement, hoverElement.nextSibling);
       }
     }
   };
 
   const mouseUpHandler = () => {
-    draggedTask.style.opacity = '1';
+    draggedElement.style.opacity = '1';
     document.removeEventListener('mousemove', mouseMoveHandler);
     document.removeEventListener('mouseup', mouseUpHandler);
-    updateTasksOrder(skill, container);
+    updateOrder(parentSkill, container, type);
   };
 
   document.addEventListener('mousemove', mouseMoveHandler);
   document.addEventListener('mouseup', mouseUpHandler);
 }
 
-function updateTasksOrder(skill, container) {
-  const taskElements = container.querySelectorAll('.task');
-  skill.tasks = Array.from(taskElements).map(el => {
-    const taskId = parseInt(el.dataset.taskId);
-    return skill.tasks.find(task => task.id === taskId);
-  });
-}
-
-function updateSkillsOrder(container) {
-  const skillElements = container.children;
-  const newOrder = Array.from(skillElements).map(el => {
-    const skillId = parseInt(el.id.split('-')[1]);
-    return findSkillById(skillId);
-  });
-
-  if (container.id === 'skillsList') {
-    skills = newOrder;
-  } else {
-    const parentSkillId = parseInt(container.closest('.skill').id.split('-')[1]);
-    const parentSkill = findSkillById(parentSkillId);
-    if (parentSkill) {
-      parentSkill.skills = newOrder;
+function updateOrder(parentSkill, container, type) {
+  const elements = container.querySelectorAll(`.${type}`);
+  if (parentSkill) {
+    if (type === 'task') {  
+      parentSkill.tasks = Array.from(elements).map(el => {
+        const taskId = parseInt(el.dataset.taskId);
+        return parentSkill.tasks.find(task => task.id === taskId);
+      });
+    } else {
+      parentSkill.skills = Array.from(elements).map(el => {
+        const skillId = parseInt(el.id.split('-')[1]); // Assuming the id is in the format 'skill-123'
+        return parentSkill.skills.find(subskill => subskill.id === skillId);
+      });
     }
+  }
+  else {
+    skills = Array.from(elements).map(el => {
+      const skillId = parseInt(el.id.split('-')[1]);
+      return skills.find(skill => skill.id === skillId);
+    });
   }
 }
 
@@ -605,7 +684,7 @@ function renderCalendar() {
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
-  const today = new Date();
+  const today = currentDate;
 
   const createDayElement = (day) => {
     const dayElement = document.createElement('div');
