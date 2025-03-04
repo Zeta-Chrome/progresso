@@ -1,0 +1,32 @@
+{
+  "name": "progresso",
+  "version": "2.0.0",
+  "description": "A progress tracking and calendar app",
+  "main": "main.js",
+  "homepage": "https://progressoelectron.com",
+  "scripts": {
+    "start": "electron .",
+    "dist:linux": "electron-builder --linux"
+  },
+  "author": "Abel M Punnoose <abel.punnoose.cosmic@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^34.3.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.cosmic.progresso",
+    "productName": "Progresso",
+    "linux": {
+      "target": [
+        "deb"
+      ],
+      "category": "Utility",
+      "icon": "assets/icons/icon256.png",
+      "maintainer": "Abel M Punnoose <abel.punnoose.cosmic@gmail.com>"
+    }
+  },
+  "dependencies": {
+    "electron-store": "^10.0.1"
+  }
+}

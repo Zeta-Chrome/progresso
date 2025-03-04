@@ -1,0 +1,11 @@
+# Ignore build output
+dist/
+
+# Ignore design files
+designs/
+
+# Ignore dependencies
+node_modules/
+
+# Ignore lock file
+package-lock.json

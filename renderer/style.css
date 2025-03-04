@@ -1,0 +1,734 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.3s, color 0.3s;
+  background-color: #fff6d4;
+  color: #333;
+  overflow: hidden;
+}
+
+.dark-mode {
+  background-color: #171717;
+  color: #ffffff;
+}
+
+#app {
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  background-color: #fff6d4;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.dark-mode header {
+  background-color: #2c2c2c;
+}
+
+h1 {
+  margin: 0;
+  font-size: 24px;
+  color: #5c5b3a;
+}
+
+.dark-mode h1 {
+  color: #848484;
+}
+
+button {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #ebfb7e;
+  color: #000000;
+  cursor: pointer;
+}
+
+.dark-mode button {
+  background-color: #3e3e3e;
+  color: rgb(240, 240, 240);
+}
+
+nav button, #themeToggle {
+  margin-right: 10px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  background-color: #fffaba;
+  color: rgb(44, 44, 44);
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 14px;
+}
+
+.dark-mode nav button, #themeToggle {
+  background-color: #727272;
+  color: rgb(240, 240, 240);
+}
+
+body.dark-mode nav button:hover, #themeToggle:hover {
+  background-color: #404040;
+}
+
+nav button:hover, #themeToggle:hover {
+  background-color: #9e9e9e;
+}
+
+#skillsList {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(27%, 1fr));
+  gap: 10px;
+  margin-bottom: 0px;
+  text-align: center;
+}
+
+#buttonContainer {
+  justify-items: center;
+  align-items: center;
+  text-align: center;
+}
+
+.button-container {
+  justify-items: center;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+#addSkillButton {
+  display: inline-block;
+  margin-bottom: 30px;
+  padding: 12px 15px;
+  border: none;
+  border-radius: 5px;
+  background-color: #c5e5ff;
+  color: rgb(255, 255, 255);
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 14px;
+}
+
+.dark-mode #addSkillButton {
+  background-color: #486c8a;
+}
+
+#addSkillButton:hover {
+  background-color: #1976D2;
+}
+
+.skills-flex{
+  grid-column: -1;
+  gap: 20px;
+  padding: 20px;
+}
+
+.skill {
+  width: 92%;
+  height: 120px;
+  margin-bottom: 5px;
+  padding: 15px;
+  background-color: #fdffde;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.dark-mode .skill {
+  background-color: #2e2e2e;
+  color: #ffffff; /* Ensure text color is white in dark mode */
+}
+
+/* Ensure progressPage takes the full viewport height */
+#progressPage {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Ensure progressPageContent takes the remaining height and scrolls only when needed */
+#progressPageContent {
+  transition: margin-left 0.3s ease;
+  max-height:75%;
+  padding-right: 20px;
+  margin-left: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#progressPageContent::-webkit-scrollbar {
+  width: 5px; /* Width of the scrollbar */
+}
+
+#progressPageContent::-webkit-scrollbar-thumb {
+  background: #c0c0c0; /* Color of the scroll thumb */
+  border-radius: 10px; /* Rounded corners of the scroll thumb */
+}
+
+.skills {
+  text-align: center;
+}
+
+#leftPanel {
+  font-size: 18px;
+  text-align: center;
+  position: absolute;
+  left: -450px;
+  top: 60px;
+  width: 400px;
+  background-color: #fff1bf;
+  border-radius: 2%;
+  transition: left 0.3s ease;
+  padding-bottom: 20px; /* Add padding at bottom */
+}
+
+#leftPanel h3 {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+/* Dark mode styling for left panel */
+.dark-mode #leftPanel {
+  background-color: #2e2e2e;
+}
+
+/* When the panel is active, it slides in */
+#leftPanel.active {
+  left: 0; /* Slide into view */
+}
+
+/* Adjust content margin to make space for the panel */
+#progressPageContent.with-panel {
+  margin-left: 420px; /* Space for the panel when visible */
+}
+
+/* Back Button */
+#leftPanel .back-button {
+  font-size: 18px;
+  font-weight: 200;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  color: #1976d2;
+}
+
+.dark-mode #leftPanel .back-button {
+  color: #c5e5ff;
+}
+
+.hours-container {
+  margin-top: 10px;
+  display: absolute;
+}
+
+.skill-details {
+  margin-top: 10px;
+  height: calc(100vh - 420px); /* Use viewport height minus some space for header */
+  overflow-y: auto;
+}
+
+.skill-details::-webkit-scrollbar {
+  width: 5px; /* Width of the scrollbar */
+}
+
+.skill-details::-webkit-scrollbar-thumb {
+  background: #c0c0c0; /* Color of the scroll thumb */
+  border-radius: 10px; /* Rounded corners of the scroll thumb */
+}
+
+#leftPanel::-webkit-scrollbar {
+  width: 5px; /* Width of the scrollbar */
+}
+
+#leftPanel::-webkit-scrollbar-thumb {
+  background: #c0c0c0; /* Color of the scroll thumb */
+  border-radius: 10px; /* Rounded corners of the scroll thumb */
+}
+
+.progress-bar .progress {
+  height: 100%;
+  background-color: #4caf50;
+  transition: width 0.3s;
+}
+
+.hours-input {
+  width: 60px;
+  margin-right: 10px;
+  padding: 5px;
+  background-color: transparent;
+  border: 1px solid #d6d7aa;
+  border-radius: 3px;
+  color: black;
+  outline: None;
+  text-align: right;
+  font-size: 18px;
+}
+
+.dark-mode .hours-input {
+  border: 1px solid #3a3a3a;
+  color: white;
+}
+
+.hours-label {
+  font-size: 16px;
+  color: #333; /* Adjust text color as needed */
+  margin-right: 80px; /* Add space to the right of the text */
+}
+
+.dark-mode .hours-label{
+  font-size: 16px;
+  color: #cfcfcf; /* Adjust text color as needed */
+  margin-right: 80px; /* Add space to the right of the text */
+}
+
+.task {
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.task input[type="checkbox"] {
+  background-color: #fdffe3;
+  margin-right: 10px;
+}
+
+.add-skill, .add-task {
+  background-color: #f3ffa7;
+  font-size: 14px;
+  border: none;
+  padding: 5px 10px;
+  margin-right: 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.dark-mode .add-skill, .dark-mode .add-task {
+  background-color: #3a3a3a;
+  color: #fff;
+}
+
+.add-skill:hover, .add-task:hover {
+  background-color: #e0e0e0;
+}
+
+.dark-mode .add-skill:hover, .dark-mode .add-task:hover {
+  background-color: #4a4a4a;
+}
+
+.skill-details {
+  padding: 10px;
+  border-top: 1px solid #ccc;
+  border-radius: 0 0 5px 5px;
+}
+
+.dark-mode .skill-details {
+  border-top: 1px solid #444; /* Darker border in dark mode */
+  background-color: #3a3a3a; /* Background color for details in dark mode */
+}
+
+.skill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 0px;
+  border-bottom: 1px solid #ccc;
+  background-color: #fffbb1;
+  border-radius: 5px;
+}
+
+.dark-mode .skill-header {
+  background-color: #262626;
+  color: #ffffff; /* Ensure text color is white in dark mode */
+}
+
+.skill-name-container {
+  display: flex;
+  align-items: center;
+  width: 80%;
+}
+
+.skill-name {
+  margin: 0;
+  width: 100%;
+  font-size: 20px;
+  font-weight: bold;
+  
+  /* Add these properties */
+  white-space: nowrap;         /* Prevents text from wrapping to a new line */
+  overflow: hidden;            /* Hides overflow content */
+  text-overflow: ellipsis;     /* Adds '...' to clipped text */
+}
+
+.dark-mode .skill-name {
+  color: #ffffff; /* Ensure text color is white in dark mode */
+}
+
+.skill-name-input {
+  margin: 0;
+  width: 100%;
+  font-size: 20px;
+  border-color: #000c0c;
+}
+
+.dark-mode .skill-name-input {
+  background-color: #262626;
+  color: #ffffff; /* Ensure text color is white in dark mode */
+}
+
+.edit-skill {
+  background-color: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  margin-left: 0px;
+}
+
+.toggle-details {
+  background-color: transparent;
+  margin-top: 0px;
+  border: none;
+  font-size: 32px;
+  cursor: pointer;
+  color:rgb(255, 238, 164);
+
+  justify-content: center;
+  align-items: center;
+}
+
+body.dark-mode .toggle-details {
+  background-color: transparent !important;
+  color: rgb(80, 80, 80) !important;
+}
+
+button.delete-task {
+  background-color: transparent;
+}
+
+/* Base styling for delete button */
+button.delete-skill {
+  background-color: transparent;
+  border: none;
+  font-size: 1em;
+  cursor: pointer;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+/* Hover and active states */
+button.delete-skill:hover {
+  transform: scale(1.1); /* Slightly increase size on hover */
+}
+
+button.delete-skill:active {
+  transform: scale(1); /* Reset size */
+}
+
+/* Styling for task elements */
+.task {
+  display: flex;
+  align-items: center;
+  position: relative; /* Required for positioning delete button */
+  margin-top: 5px;
+  padding: 5px;
+  background-color: #fff4ae;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+body.dark-mode .task {
+  background-color: #2e2e2e; /* Darker background for dark mode */
+}
+
+/* Styling for task content */
+.task-content {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.task input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+.task span {
+  flex-grow: 1;
+}
+
+/* Base styling for progress bars */
+.progress-bar {
+  background-color: #fffdee; /* Light background for the progress bar */
+  margin-top: 20px;
+  border-radius: 5px;
+  overflow: hidden;
+  height: 25px;
+  width: 100%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: width 0.3s ease;
+}
+
+/* Progress bar fill */
+.progress {
+  background-color: #1e577d; /* Default blue color */
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+/* Dark mode styling for progress bars */
+body.dark-mode .progress-bar {
+  background-color: #696969; /* Darker background for dark mode */
+}
+
+body.dark-mode .progress {
+  background-color: #13987e; /* Lighter green color for dark mode */
+}
+
+/* Base styling for the main progress bar */
+#overallProgress {
+  height: 20px;
+  background-color: #ffffeb; /* Light background for light mode */
+  margin-bottom: 20px;
+  border-radius: 10px;
+}
+
+/* Progress bar fill for the main progress bar */
+#overallProgress .progress-bar {
+  height: 100%;
+  background-color: #8aff8e; /* Default green color for light mode */
+  transition: width 0.3s ease;
+}
+
+/* Dark mode styling for the main progress bar */
+body.dark-mode #overallProgress {
+  background-color: #555; /* Darker background for dark mode */
+}
+
+body.dark-mode #overallProgress .progress-bar {
+  background-color: #1e90ff; /* Lighter blue color for dark mode */
+}
+
+#calendarPage {
+  display: flex;
+  flex-direction: column;
+  height: 77vh;
+  background-color: #fbffbe;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+body.dark-mode #calendarPage {
+  background-color: #2c2c2c;
+}
+
+#calendarHeader {
+  flex-shrink: 0;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#calendarGrid {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  min-height: 0; /* Allow the grid to shrink */
+}
+
+#calendarContainer {
+  flex: 0 0 70%; /* Set to 75% of the parent width */
+  display: flex;
+  flex-direction: column;
+}
+
+#daysOfWeek {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  margin-bottom: 0px;
+  text-align: center;
+}
+
+#daysOfWeek h2 {
+  font-size: 0.9em;
+  margin: 0;
+  padding: 2px 0;
+}
+
+#calendar {
+  flex: 1;
+  display: grid;
+  margin-top: 10px;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 5px;
+  min-height: 0; /* Allow the calendar to shrink */
+}
+
+.calendar-day {
+  aspect-ratio: 1.9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 40%;
+  font-weight: bold;
+  cursor: pointer;
+  transition: border 0.5s ease, transform 0.1s ease-in-out;
+  box-sizing: border-box;
+  border: 2px solid transparent;
+  font-size: 1.0vw; /* Responsive font size */
+}
+
+.calendar-day:hover {
+  transform: scale(1.07);
+}
+
+.calendar-day.empty {
+  background-color: transparent;
+  cursor: default;
+}
+
+.calendar-day.current-day {
+  border-color: #00858d;
+}
+
+.calendar-day.selected-day {
+  border-color: purple;
+}
+
+#rightPanel {
+  flex: 0 0 30%; /* Set to 30% of the parent width */
+  border-left: 1px solid #f8ffc4;
+  padding-left: 20px;
+  overflow-y: auto;
+  max-height: calc(80vh - 100px); /* Match height with calendarPage */
+}
+
+#rightPanel h4, 
+#rightPanel input.hours-input {
+  display: inline-block;
+  margin-top: 0px !important;
+  margin-right: 0px;
+  vertical-align: middle;
+}
+
+#exerciseHours {
+  margin-bottom: 20px;
+}
+
+.date {
+  display: flex;          
+  align-items: center;     
+  gap: 10px;             
+}
+
+.date button{
+  margin-bottom: 30px;
+  margin-left: 10px;
+}
+
+.button-set {
+  color: red !important;
+}
+
+#taskContainer {
+  max-height: 240px; /* Adjust as needed */
+  overflow-y: auto; /* Enable scrolling */
+  transition: max-height 0.3s ease-in-out;
+}
+
+#taskContainer.expand {
+  max-height: 10000px; /* Set a large value to ensure it can expand fully */
+}
+
+.dark-mode #rightPanel {
+  border-left-color: #444;
+}
+
+/* Right Panel Styles */
+#rightPanel h3, #rightPanel h4 {
+  margin-top: 0;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+}
+
+.dark-mode #rightPanel h3, .dark-mode #rightPanel h4 {
+  border-bottom-color: #444;
+}
+
+#totalHours {
+  font-size: 1.2em;
+  margin-bottom: 5px;
+}
+
+#taskList {
+  list-style-type: none;
+  padding: 0;
+}
+
+#taskList li {
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #f0ffa7;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.dark-mode #taskList li {
+  background-color: #3a3a3a;
+}
+
+#chartPage {
+  height: calc(100vh - 160px);
+  width: 100%;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+#chartContainer {
+  flex: 1;
+  position: relative;
+  width: calc(100% - 40px); /* Accounts for 20px left + 20px right padding */
+  height: calc(100% - 40px); /* Accounts for 20px top + 20px bottom padding */
+  box-sizing: border-box;
+}
+
+#chartContainer canvas {
+  width: 100% !important;
+  height: 92% !important;
+  display: block;
+}
+
+/* Fix for chart title */
+#chartTitle {
+  margin-bottom: 25px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.dark-mode #chartPage {
+  background-color: #2a2a2a;
+  color: white;
+}
+
+.light-mode #chartPage {
+  background-color: white;
+  color: black;
+}
