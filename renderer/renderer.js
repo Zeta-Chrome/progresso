@@ -503,6 +503,34 @@ function renderTasks(tasksElement, skill) {
       saveData();
     });
 
+    // Add double-click to edit task name
+    const nameSpan = taskElement.querySelector('span');
+    nameSpan.addEventListener('dblclick', () => {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'task-name-input';
+      input.value = task.name;
+      nameSpan.replaceWith(input);
+      input.focus();
+
+      const saveName = () => {
+        const newName = input.value.trim();
+        if (newName) {
+          task.name = newName;
+          saveData();
+        }
+        renderTasks(tasksElement, skill);
+      };
+
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          saveName();
+        }
+      });
+
+      input.addEventListener('blur', saveName);
+    });
+
     taskElement.querySelector('.delete-task').addEventListener('click', () => {
       skill.tasks = skill.tasks.filter(t => t.id !== task.id);
       renderTasks(tasksElement, skill);
