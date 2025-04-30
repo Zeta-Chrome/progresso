@@ -5,6 +5,7 @@ Progresso is a productivity app that helps you track your progress on various sk
 ### Linux
 
 Download and run the `.deb` file from the [Releases](https://github.com/6162-code-656C/Progresso-electron) page.
+Currently set to `.pacman` for arch builds.
 
 ## Usage
 
@@ -15,6 +16,9 @@ Download and run the `.deb` file from the [Releases](https://github.com/6162-cod
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Initialization
+npm install
 
 ## Installation
 npm run dist:linux

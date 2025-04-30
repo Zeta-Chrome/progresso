@@ -19,7 +19,7 @@
     "productName": "Progresso",
     "linux": {
       "target": [
-        "deb"
+        "pacman"
       ],
       "category": "Utility",
       "icon": "assets/icons/icon256.png",
@@ -28,5 +28,12 @@
   },
   "dependencies": {
     "electron-store": "^10.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zeta-Chrome/progresso.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Zeta-Chrome/progresso/issues"
   }
 }
