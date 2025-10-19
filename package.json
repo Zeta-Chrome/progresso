@@ -19,11 +19,21 @@
     "productName": "Progresso",
     "linux": {
       "target": [
-        "pacman"
+        {
+          "target": "pacman",
+          "arch": ["x64"]
+        }
       ],
       "category": "Utility",
       "icon": "assets/icons/icon256.png",
       "maintainer": "Abel M Punnoose <abel.punnoose.cosmic@gmail.com>"
+    },
+    "pacman": {
+      "depends": [
+        "gtk3",
+        "libnotify",
+        "nss"
+      ]
     }
   },
   "dependencies": {
