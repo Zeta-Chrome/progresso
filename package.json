@@ -11,8 +11,8 @@
   "author": "Abel M Punnoose <abel.punnoose.cosmic@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^34.3.0",
-    "electron-builder": "^25.1.8"
+    "electron": "^39.2.1",
+    "electron-builder": "^26.2.0"
   },
   "build": {
     "appId": "com.cosmic.progresso",
@@ -21,7 +21,9 @@
       "target": [
         {
           "target": "pacman",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "category": "Utility",

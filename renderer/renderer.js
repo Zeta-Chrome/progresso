@@ -17,21 +17,41 @@ function loadData() {
         if (savedData) {
             console.log("Loaded data:", savedData);
             currentTheme = savedData.currentTheme || "light";
-            skills = savedData.skills || [];
+
+            // Clean the skills data to remove any null/undefined values
+            skills = cleanSkillsData(savedData.skills || []);
+
             hoursWorkedDict = savedData.hoursWorkedDict || {};
             exerciseHoursDict = savedData.exerciseHoursDict || {};
-            selectedDate = savedData.selectedDate
-                ? new Date(savedData.selectedDate)
-                : new Date();
+            selectedDate = savedData.selectedDate ? new Date(savedData.selectedDate) : new Date();
         } else {
             console.log("No saved data found.");
+            selectedDate = new Date();
         }
 
-        currentDate = new Date(); // Ensure currentDate is always set to today
+        currentDate = new Date();
+        setCurrentTheme();
+        setupEventListeners();
+        showProgressPage();
+    }).catch(error => {
+        console.error("Error loading data:", error);
+        currentDate = new Date();
+        selectedDate = new Date();
         setCurrentTheme();
         setupEventListeners();
         showProgressPage();
     });
+}
+
+function cleanSkillsData(skillsList) {
+    return skillsList
+        .filter(skill => skill !== null && skill !== undefined)
+        .filter(skill => skill.name !== "" || !skill.isEditing) // Remove empty skills unless actively editing
+        .map(skill => ({
+            ...skill,
+            tasks: (skill.tasks || []).filter(task => task !== null && task !== undefined),
+            skills: cleanSkillsData(skill.skills || [])
+        }));
 }
 
 function setCurrentTheme() {
@@ -441,13 +461,8 @@ function addTask(detailsContainer, skill) {
     const taskElement = document.createElement("div");
     taskElement.className = "task";
     taskElement.dataset.taskId = taskId;
-    taskElement.innerHTML = `
-    <div class="task-content">
-      <input type="text" class="task-name-input" value="" placeholder="Enter task name">
-      <input type="checkbox">
-      <button class="delete-task">🗑️</button>
-    </div>
-  `;
+    taskElement.innerHTML = `<input type="text" class="task-name-input" placeholder="Task name">
+    <button class="delete-task">🗑️</button>`;
 
     const tasksContainer = detailsContainer.querySelector(".tasks");
     tasksContainer.appendChild(taskElement);
@@ -455,13 +470,15 @@ function addTask(detailsContainer, skill) {
     const input = taskElement.querySelector(".task-name-input");
     input.focus();
 
+    let taskAdded = false; // ← Track if task was added
+
     input.addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
-            const input = taskElement.querySelector(".task-name-input");
             const taskName = input.value.trim();
             if (taskName) {
                 skill.tasks.push({ id: taskId, name: taskName, completed: false });
-                skill.tasks = sortTasks(skill.tasks); // Sort tasks after adding a new one
+                taskAdded = true; // ← Mark as added
+                skill.tasks = sortTasks(skill.tasks);
                 renderTasks(tasksContainer, skill);
                 updatePanelProgress(skill);
                 updateSkillProgress(skill);
@@ -473,7 +490,23 @@ function addTask(detailsContainer, skill) {
     });
 
     taskElement.querySelector(".delete-task").addEventListener("click", () => {
+        // If task was somehow added, remove it from the array
+        if (taskAdded) {
+            skill.tasks = skill.tasks.filter(t => t.id !== taskId);
+        }
         taskElement.remove();
+    });
+
+    // Handle clicking outside to cancel
+    input.addEventListener("blur", () => {
+        if (!taskAdded) {
+            // Remove the element if task wasn't added
+            setTimeout(() => {
+                if (!taskAdded && taskElement.parentNode) {
+                    taskElement.remove();
+                }
+            }, 200);
+        }
     });
 }
 
@@ -489,19 +522,18 @@ function sortTasks(tasks) {
 
 function renderTasks(tasksElement, skill) {
     tasksElement.innerHTML = "";
-    const sortedTasks = sortTasks(skill.tasks);
+
+    // Filter out any null or undefined tasks before rendering
+    const validTasks = skill.tasks.filter(task => task !== null && task !== undefined);
+    const sortedTasks = sortTasks(validTasks);
 
     sortedTasks.forEach((task) => {
         const taskElement = document.createElement("div");
         taskElement.className = "task";
         taskElement.dataset.taskId = task.id;
-        taskElement.innerHTML = `
-      <div class="task-content">
-        <input type="checkbox" ${task.completed ? "checked" : ""}>
-        <span>${task.name}</span>
-      </div>
-      <button class="delete-task">🗑️</button>
-    `;
+        taskElement.innerHTML = `<input type="checkbox" ${task.completed ? "checked" : ""}>
+      <span>${task.name}</span>
+      <button class="delete-task">🗑️</button>`;
 
         const checkbox = taskElement.querySelector('input[type="checkbox"]');
         checkbox.addEventListener("change", (e) => {
@@ -510,11 +542,9 @@ function renderTasks(tasksElement, skill) {
             task.date = currentDate;
 
             if (wasCompleted && !task.completed) {
-                // If a checked task is unchecked, move it to the top of the list
                 skill.tasks = skill.tasks.filter((t) => t.id !== task.id);
                 skill.tasks.unshift(task);
             } else if (!wasCompleted && task.completed) {
-                // If an unchecked task is checked, move it to the bottom of the list
                 skill.tasks = skill.tasks.filter((t) => t.id !== task.id);
                 skill.tasks.push(task);
             }
@@ -522,11 +552,10 @@ function renderTasks(tasksElement, skill) {
             updatePanelProgress(skill);
             updateSkillProgress(skill);
             updateOverallProgress();
-            renderTasks(tasksElement, skill); // Re-render tasks to update order
+            renderTasks(tasksElement, skill);
             saveData();
         });
 
-        // Add double-click to edit task name
         const nameSpan = taskElement.querySelector("span");
         nameSpan.addEventListener("dblclick", () => {
             const input = document.createElement("input");
@@ -562,10 +591,10 @@ function renderTasks(tasksElement, skill) {
             updateOverallProgress();
             saveData();
         });
+
         tasksElement.appendChild(taskElement);
     });
 }
-
 function calculateTotalTasks(skill) {
     if (skill.skills.length > 0)
         return (
@@ -604,7 +633,7 @@ function updatePanelProgress(skill) {
 
     if (leftPanel) {
         const skillName = leftPanel.querySelector(".open-skill-name");
-        if(skillName) {
+        if (skillName) {
             skillName.textContent = skillName.textContent.replace(/\d+\/\d+/g, `${completedTasks}/${totalTasks}`);
         }
 
@@ -722,24 +751,37 @@ function setupDragAndDrop(Element, container, parentSkill, type) {
 
 function updateOrder(parentSkill, container, type) {
     const elements = container.querySelectorAll(`.${type}`);
+
     if (parentSkill) {
         if (type === "task") {
-            parentSkill.tasks = Array.from(elements).map((el) => {
-                const taskId = parseInt(el.dataset.taskId);
-                return parentSkill.tasks.find((task) => task.id === taskId);
-            });
+            // Filter out any undefined/null values from the mapping
+            parentSkill.tasks = Array.from(elements)
+                .map((el) => {
+                    const taskId = parseInt(el.dataset.taskId);
+                    return parentSkill.tasks.find((task) => task.id === taskId);
+                })
+                .filter(task => task !== null && task !== undefined); // ← CRITICAL FIX
+
         } else {
-            parentSkill.skills = Array.from(elements).map((el) => {
-                const skillId = parseInt(el.id.split("-")[1]); // Assuming the id is in the format 'skill-123'
-                return parentSkill.skills.find((subskill) => subskill.id === skillId);
-            });
+            // Filter out any undefined/null values from the mapping
+            parentSkill.skills = Array.from(elements)
+                .map((el) => {
+                    const skillId = parseInt(el.id.split("-")[1]);
+                    return parentSkill.skills.find((subskill) => subskill.id === skillId);
+                })
+                .filter(skill => skill !== null && skill !== undefined); // ← CRITICAL FIX
         }
     } else {
-        skills = Array.from(elements).map((el) => {
-            const skillId = parseInt(el.id.split("-")[1]);
-            return skills.find((skill) => skill.id === skillId);
-        });
+        // Filter out any undefined/null values from the mapping
+        skills = Array.from(elements)
+            .map((el) => {
+                const skillId = parseInt(el.id.split("-")[1]);
+                return skills.find((skill) => skill.id === skillId);
+            })
+            .filter(skill => skill !== null && skill !== undefined); // ← CRITICAL FIX
     }
+
+    saveData();
 }
 
 function renderCalendar() {
@@ -1112,9 +1154,12 @@ function renderChart() {
 }
 
 function saveData() {
+    // Clean skills before saving to prevent null values
+    const cleanedSkills = cleanSkillsData(skills);
+
     const data = {
         currentTheme,
-        skills,
+        skills: cleanedSkills,
         hoursWorkedDict,
         exerciseHoursDict,
         selectedDate: selectedDate ? selectedDate.toISOString() : null,
@@ -1123,7 +1168,6 @@ function saveData() {
     console.log("Saving data:", data);
     window.electronAPI.saveData("ProgressoData", data);
 }
-
 // Update your app quitting listener
 window.electronAPI.onAppQuitting(() => {
     saveData();
