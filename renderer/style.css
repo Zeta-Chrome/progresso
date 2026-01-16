@@ -637,7 +637,7 @@ body.dark-mode #calendarPage {
 }
 
 .calendar-day {
-  aspect-ratio: 1.9;
+  aspect-ratio: 1.8;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -672,7 +672,6 @@ body.dark-mode #calendarPage {
   border-left: 1px solid #f8ffc4;
   padding-left: 20px;
   overflow-y: auto;
-  max-height: calc(80vh - 100px);
 }
 
 #rightPanel h4, 
@@ -703,7 +702,7 @@ body.dark-mode #calendarPage {
 }
 
 #taskContainer {
-  max-height: 240px;
+  max-height: 400px;
   overflow-y: auto;
   overflow-x: hidden;
   transition: max-height 0.3s ease-in-out;

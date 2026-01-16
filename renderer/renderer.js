@@ -865,7 +865,7 @@ function renderCalendar() {
         currentDate.getMonth(),
         1,
     ).getDay();
-    const today = currentDate;
+    const today = new Date();
 
     const createDayElement = (day) => {
         const dayElement = document.createElement("div");
