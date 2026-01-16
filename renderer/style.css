@@ -143,10 +143,9 @@ nav button:hover, #themeToggle:hover {
 
 .dark-mode .skill {
   background-color: #2e2e2e;
-  color: #ffffff; /* Ensure text color is white in dark mode */
+  color: #ffffff;
 }
 
-/* Ensure progressPage takes the full viewport height */
 #progressPage {
   position: relative;
   width: 100%;
@@ -154,7 +153,6 @@ nav button:hover, #themeToggle:hover {
   overflow: hidden;
 }
 
-/* Ensure progressPageContent takes the remaining height and scrolls only when needed */
 #progressPageContent {
   transition: margin-left 0.3s ease;
   max-height:75%;
@@ -165,12 +163,12 @@ nav button:hover, #themeToggle:hover {
 }
 
 #progressPageContent::-webkit-scrollbar {
-  width: 5px; /* Width of the scrollbar */
+  width: 5px;
 }
 
 #progressPageContent::-webkit-scrollbar-thumb {
-  background: #c0c0c0; /* Color of the scroll thumb */
-  border-radius: 10px; /* Rounded corners of the scroll thumb */
+  background: #c0c0c0;
+  border-radius: 10px;
 }
 
 .skills {
@@ -187,7 +185,7 @@ nav button:hover, #themeToggle:hover {
   background-color: #fff1bf;
   border-radius: 2%;
   transition: left 0.3s ease;
-  padding-bottom: 20px; /* Add padding at bottom */
+  padding-bottom: 20px;
 }
 
 #leftPanel h3 {
@@ -195,22 +193,18 @@ nav button:hover, #themeToggle:hover {
   margin-bottom: 10px;
 }
 
-/* Dark mode styling for left panel */
 .dark-mode #leftPanel {
   background-color: #2e2e2e;
 }
 
-/* When the panel is active, it slides in */
 #leftPanel.active {
-  left: 0; /* Slide into view */
+  left: 0;
 }
 
-/* Adjust content margin to make space for the panel */
 #progressPageContent.with-panel {
-  margin-left: 420px; /* Space for the panel when visible */
+  margin-left: 420px;
 }
 
-/* Back Button */
 #leftPanel .back-button {
   font-size: 18px;
   font-weight: 200;
@@ -231,26 +225,26 @@ nav button:hover, #themeToggle:hover {
 
 .skill-details {
   margin-top: 10px;
-  height: calc(100vh - 420px); /* Use viewport height minus some space for header */
+  height: calc(100vh - 420px);
   overflow-y: auto;
 }
 
 .skill-details::-webkit-scrollbar {
-  width: 5px; /* Width of the scrollbar */
+  width: 5px;
 }
 
 .skill-details::-webkit-scrollbar-thumb {
-  background: #c0c0c0; /* Color of the scroll thumb */
-  border-radius: 10px; /* Rounded corners of the scroll thumb */
+  background: #c0c0c0;
+  border-radius: 10px;
 }
 
 #leftPanel::-webkit-scrollbar {
-  width: 5px; /* Width of the scrollbar */
+  width: 5px;
 }
 
 #leftPanel::-webkit-scrollbar-thumb {
-  background: #c0c0c0; /* Color of the scroll thumb */
-  border-radius: 10px; /* Rounded corners of the scroll thumb */
+  background: #c0c0c0;
+  border-radius: 10px;
 }
 
 .progress-bar .progress {
@@ -279,25 +273,121 @@ nav button:hover, #themeToggle:hover {
 
 .hours-label {
   font-size: 16px;
-  color: #333; /* Adjust text color as needed */
-  margin-right: 80px; /* Add space to the right of the text */
+  color: #333;
+  margin-right: 80px;
 }
 
 .dark-mode .hours-label{
   font-size: 16px;
-  color: #cfcfcf; /* Adjust text color as needed */
-  margin-right: 80px; /* Add space to the right of the text */
+  color: #cfcfcf;
+  margin-right: 80px;
 }
 
 .task {
   display: flex;
   align-items: center;
+  position: relative;
   margin-top: 5px;
+  padding: 5px;
+  background-color: #fff4ae;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  cursor: pointer;
 }
 
-.task input[type="checkbox"] {
-  background-color: #fdffe3;
+body.dark-mode .task {
+  background-color: #2e2e2e;
+}
+
+/* Checkbox container with badge */
+.checkbox-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.checkbox-container input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  margin: 0;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: 2px solid #a8a89d;
+  border-radius: 3px;
+  background-color: #fdfff0;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dark-mode .checkbox-container input[type="checkbox"] {
+  border-color: #5a5a5a;
+  background-color: #3a3a3a;
+}
+
+.checkbox-container input[type="checkbox"]:hover {
+  border-color: #8a8a7d;
+}
+
+.checkbox-container input[type="checkbox"]:checked {
+  background-color: #4caf50;
+  border-color: #4caf50;
+}
+
+.dark-mode .checkbox-container input[type="checkbox"]:checked {
+  background-color: #13987e;
+  border-color: #13987e;
+}
+
+.checkbox-container input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 58%;
+  left: 54%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.checkbox-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 15px;
+  font-weight: bold;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+  line-height: 1;
+}
+
+.checkbox-badge.planned {
+  color: #6b8e6b;
+}
+
+.checkbox-badge.unplanned {
+  color: #8e6b6b;
+}
+
+.dark-mode .checkbox-badge.planned {
+  color: #7a9e7a;
+}
+
+.dark-mode .checkbox-badge.unplanned {
+  color: #9e7a7a;
 }
 
 .add-skill, .add-task {
@@ -331,8 +421,8 @@ nav button:hover, #themeToggle:hover {
 }
 
 .dark-mode .skill-details {
-  border-top: 1px solid #444; /* Darker border in dark mode */
-  background-color: #3a3a3a; /* Background color for details in dark mode */
+  border-top: 1px solid #444;
+  background-color: #3a3a3a;
 }
 
 .skill-header {
@@ -348,7 +438,7 @@ nav button:hover, #themeToggle:hover {
 
 .dark-mode .skill-header {
   background-color: #262626;
-  color: #ffffff; /* Ensure text color is white in dark mode */
+  color: #ffffff;
 }
 
 .skill-name-container {
@@ -362,15 +452,13 @@ nav button:hover, #themeToggle:hover {
   width: 100%;
   font-size: 20px;
   font-weight: bold;
-  
-  /* Add these properties */
-  white-space: nowrap;         /* Prevents text from wrapping to a new line */
-  overflow: hidden;            /* Hides overflow content */
-  text-overflow: ellipsis;     /* Adds '...' to clipped text */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dark-mode .skill-name {
-  color: #ffffff; /* Ensure text color is white in dark mode */
+  color: #ffffff;
 }
 
 .skill-name-input {
@@ -382,7 +470,7 @@ nav button:hover, #themeToggle:hover {
 
 .dark-mode .skill-name-input {
   background-color: #262626;
-  color: #ffffff; /* Ensure text color is white in dark mode */
+  color: #ffffff;
 }
 
 .edit-skill {
@@ -400,7 +488,6 @@ nav button:hover, #themeToggle:hover {
   font-size: 32px;
   cursor: pointer;
   color:rgb(255, 238, 164);
-
   justify-content: center;
   align-items: center;
 }
@@ -412,9 +499,9 @@ body.dark-mode .toggle-details {
 
 button.delete-task {
   background-color: transparent;
+  margin-left: auto;
 }
 
-/* Base styling for delete button */
 button.delete-skill {
   background-color: transparent;
   border: none;
@@ -423,49 +510,26 @@ button.delete-skill {
   transition: color 0.3s ease, transform 0.2s ease;
 }
 
-/* Hover and active states */
 button.delete-skill:hover {
-  transform: scale(1.1); /* Slightly increase size on hover */
+  transform: scale(1.1);
 }
 
 button.delete-skill:active {
-  transform: scale(1); /* Reset size */
+  transform: scale(1);
 }
 
-/* Styling for task elements */
-.task {
-  display: flex;
-  align-items: center;
-  position: relative; /* Required for positioning delete button */
-  margin-top: 5px;
-  padding: 5px;
-  background-color: #fff4ae;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-body.dark-mode .task {
-  background-color: #2e2e2e; /* Darker background for dark mode */
-}
-
-/* Styling for task content */
 .task-content {
   display: flex;
   align-items: center;
   flex-grow: 1;
 }
 
-.task input[type="checkbox"] {
-  margin-right: 10px;
-}
-
 .task span {
   flex-grow: 1;
 }
 
-/* Base styling for progress bars */
 .progress-bar {
-  background-color: #fffdee; /* Light background for the progress bar */
+  background-color: #fffdee;
   margin-top: 20px;
   border-radius: 5px;
   overflow: hidden;
@@ -475,44 +539,39 @@ body.dark-mode .task {
   transition: width 0.3s ease;
 }
 
-/* Progress bar fill */
 .progress {
-  background-color: #1e577d; /* Default blue color */
+  background-color: #1e577d;
   height: 100%;
   transition: width 0.3s ease;
 }
 
-/* Dark mode styling for progress bars */
 body.dark-mode .progress-bar {
-  background-color: #696969; /* Darker background for dark mode */
+  background-color: #696969;
 }
 
 body.dark-mode .progress {
-  background-color: #13987e; /* Lighter green color for dark mode */
+  background-color: #13987e;
 }
 
-/* Base styling for the main progress bar */
 #overallProgress {
   height: 20px;
-  background-color: #ffffeb; /* Light background for light mode */
+  background-color: #ffffeb;
   margin-bottom: 20px;
   border-radius: 10px;
 }
 
-/* Progress bar fill for the main progress bar */
 #overallProgress .progress-bar {
   height: 100%;
-  background-color: #8aff8e; /* Default green color for light mode */
+  background-color: #8aff8e;
   transition: width 0.3s ease;
 }
 
-/* Dark mode styling for the main progress bar */
 body.dark-mode #overallProgress {
-  background-color: #555; /* Darker background for dark mode */
+  background-color: #555;
 }
 
 body.dark-mode #overallProgress .progress-bar {
-  background-color: #1e90ff; /* Lighter blue color for dark mode */
+  background-color: #1e90ff;
 }
 
 #calendarPage {
@@ -543,11 +602,11 @@ body.dark-mode #calendarPage {
   display: flex;
   flex: 1;
   gap: 8px;
-  min-height: 0; /* Allow the grid to shrink */
+  min-height: 0;
 }
 
 #calendarContainer {
-  flex: 0 0 70%; /* Set to 75% of the parent width */
+  flex: 0 0 70%;
   display: flex;
   flex-direction: column;
 }
@@ -574,7 +633,7 @@ body.dark-mode #calendarPage {
   grid-template-columns: repeat(7, 1fr);
   grid-template-rows: repeat(6, 1fr);
   gap: 5px;
-  min-height: 0; /* Allow the calendar to shrink */
+  min-height: 0;
 }
 
 .calendar-day {
@@ -588,7 +647,7 @@ body.dark-mode #calendarPage {
   transition: border 0.5s ease, transform 0.1s ease-in-out;
   box-sizing: border-box;
   border: 2px solid transparent;
-  font-size: 1.0vw; /* Responsive font size */
+  font-size: 1.0vw;
 }
 
 .calendar-day:hover {
@@ -609,11 +668,11 @@ body.dark-mode #calendarPage {
 }
 
 #rightPanel {
-  flex: 0 0 30%; /* Set to 30% of the parent width */
+  flex: 0 0 30%;
   border-left: 1px solid #f8ffc4;
   padding-left: 20px;
   overflow-y: auto;
-  max-height: calc(80vh - 100px); /* Match height with calendarPage */
+  max-height: calc(80vh - 100px);
 }
 
 #rightPanel h4, 
@@ -644,24 +703,27 @@ body.dark-mode #calendarPage {
 }
 
 #taskContainer {
-  max-height: 240px; /* Adjust as needed */
-  overflow-y: auto; /* Enable scrolling */
+  max-height: 240px;
+  overflow-y: auto;
+  overflow-x: hidden;
   transition: max-height 0.3s ease-in-out;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 #taskContainer.expand {
-  max-height: 10000px; /* Set a large value to ensure it can expand fully */
+  max-height: 10000px;
 }
 
 .dark-mode #rightPanel {
   border-left-color: #444;
 }
 
-/* Right Panel Styles */
 #rightPanel h3, #rightPanel h4 {
   margin-top: 0;
   border-bottom: 1px solid #ccc;
   padding-bottom: 10px;
+  text-align: center;
 }
 
 .dark-mode #rightPanel h3, .dark-mode #rightPanel h4 {
@@ -673,21 +735,46 @@ body.dark-mode #calendarPage {
   margin-bottom: 5px;
 }
 
+.task-heading {
+    width: 95%;
+}
+
 #taskList {
   list-style-type: none;
   padding: 0;
+  margin: 0;
 }
 
 #taskList li {
   margin-bottom: 10px;
+  width: 90%;
   padding: 10px;
-  background-color: #f0ffa7;
   border-radius: 5px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  text-align: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
-.dark-mode #taskList li {
+/* Color coding for tasks in calendar view */
+#taskList li.task-completed {
+  background-color: #f0ffa7;
+  color: #4caf50;
+}
+
+#taskList li.task-uncompleted {
+  background-color: #f0ffa7;
+  color: #f44336;
+}
+
+.dark-mode #taskList li.task-completed {
   background-color: #3a3a3a;
+  color: #2e7d32;
+}
+
+.dark-mode #taskList li.task-uncompleted {
+  background-color: #3a3a3a;
+  color: #c62828;
 }
 
 #chartPage {
@@ -704,8 +791,8 @@ body.dark-mode #calendarPage {
 #chartContainer {
   flex: 1;
   position: relative;
-  width: calc(100% - 40px); /* Accounts for 20px left + 20px right padding */
-  height: calc(100% - 40px); /* Accounts for 20px top + 20px bottom padding */
+  width: calc(100% - 40px);
+  height: calc(100% - 40px);
   box-sizing: border-box;
 }
 
@@ -715,7 +802,6 @@ body.dark-mode #calendarPage {
   display: block;
 }
 
-/* Fix for chart title */
 #chartTitle {
   margin-bottom: 25px;
   text-align: center;
