@@ -30,6 +30,9 @@ function loadData() {
         }
 
         currentDate = new Date();
+        rolloverPlannedTasks();
+        saveData();
+        startMidnightRollover();
         setCurrentTheme();
         setupEventListeners();
         showProgressPage();
@@ -41,6 +44,42 @@ function loadData() {
         setupEventListeners();
         showProgressPage();
     });
+}
+
+function rolloverPlannedTasks() {
+    const todayStr = formatDate(new Date());
+
+    function processSkill(skill) {
+        skill.tasks.forEach(task => {
+            if (task.planned && !task.completed && task.plannedDate && task.plannedDate < todayStr) {
+                task.plannedDate = todayStr;
+            }
+        });
+        if (skill.skills && skill.skills.length > 0) {
+            skill.skills.forEach(subskill => processSkill(subskill));
+        }
+    }
+
+    skills.forEach(skill => processSkill(skill));
+}
+
+function startMidnightRollover() {
+    const now = new Date();
+    const msUntilMidnight = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
+        0, 0, 0, 0
+    ) - now;
+
+    setTimeout(() => {
+        rolloverPlannedTasks();
+        saveData();
+        renderCalendar();
+        renderSkills();
+
+        startMidnightRollover();
+    }, msUntilMidnight);
 }
 
 function cleanSkillsData(skillsList) {
@@ -568,7 +607,7 @@ function renderTasks(tasksElement, skill) {
         checkbox.addEventListener("change", (e) => {
             const wasCompleted = task.completed;
             task.completed = e.target.checked;
-            task.date = currentDate;
+            task.date = new Date();
 
             if (wasCompleted && !task.completed) {
                 skill.tasks = skill.tasks.filter((t) => t.id !== task.id);
